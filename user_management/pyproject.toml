@@ -10,6 +10,8 @@ python = "^3.11"
 fastapi = "^0.103.2"
 pre-commit = "^3.4.0"
 pyyaml = "^6.0.1"
+uvicorn = "^0.23.2"
+pydantic-settings = "^2.0.3"
 
 
 [build-system]
