@@ -10,6 +10,7 @@ repos:
     rev: 23.7.0
     hooks:
       - id: black
+        exclude: ^migrations/
   - repo: https://github.com/pre-commit/mirrors-isort
     rev: v5.10.0
     hooks:

@@ -8,8 +8,7 @@ WORKDIR /app
 RUN pip install poetry==1.6.1
 
 COPY ../pyproject.toml poetry.lock  ./
-COPY ../../.env ./
 
 RUN poetry config virtualenvs.create false && poetry install --no-interaction --no-ansi
 
-COPY .. /app/
+COPY . /app/
