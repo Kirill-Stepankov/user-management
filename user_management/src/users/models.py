@@ -26,7 +26,7 @@ class User(Base):
     surname: Mapped[str] = mapped_column(Text, nullable=True)
     hashed_password: Mapped[str] = mapped_column(Text, nullable=True)
     username: Mapped[str] = mapped_column(Text, unique=True, index=True)
-    email: Mapped[str] = mapped_column(Text, unique=True, index=True)
+    email: Mapped[str] = mapped_column(Text, index=True, nullable=True)
     phone_number: Mapped[str] = mapped_column(Text, nullable=True)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.USER)
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)

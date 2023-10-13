@@ -28,6 +28,6 @@ async def unicorn_exception_handler(request: Request, exc: UserAlreadyExistsExce
     return JSONResponse(
         status_code=400,
         content={
-            "detail": f"User with '{exc.username}' username or '{exc.email}' email is already registered"
+            "detail": f"User with '{exc.username}' username is already registered."
         },
     )

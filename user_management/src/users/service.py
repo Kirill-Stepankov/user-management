@@ -11,9 +11,8 @@ class UserService:
 
     async def add_user(self, user: UserAddSchema) -> UserOutputSchema:
         user_by_username = await self.user_repo.find(username=user.username)
-        user_by_email = await self.user_repo.find(email=user.email)
-        if user_by_email or user_by_username:
-            raise UserAlreadyExistsException(user.username, user.email)
+        if user_by_username:
+            raise UserAlreadyExistsException(user.username)
 
         user.hashed_password = HashPassword.create_hash(user.hashed_password)
         user_id = await self.user_repo.add_one(user.model_dump())

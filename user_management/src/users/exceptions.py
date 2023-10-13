@@ -1,4 +1,3 @@
 class UserAlreadyExistsException(Exception):
-    def __init__(self, username: str, email: str):
+    def __init__(self, username: str):
         self.username = username
-        self.email = email

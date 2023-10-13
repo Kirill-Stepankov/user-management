@@ -8,16 +8,6 @@ from .utils import Role
 
 class UserBaseSchema(BaseModel):
     username: str = Field(max_length=255)
-    email: str
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, value):
-        try:
-            validate_email(value)
-        except EmailNotValidError:
-            raise ValueError("Invalid email format")
-        return value
 
 
 class UserAddSchema(UserBaseSchema):
@@ -31,6 +21,7 @@ class UserOutputSchema(UserBaseSchema):
 class UserSchema(UserBaseSchema):
     uuid: UUID4
     name: str = Field(max_length=255)
+    email: str = Field(max_length=255)
     surname: str = Field(max_length=255)
     phone_number: str = Field(min_length=4, max_length=30)
     role: Role
@@ -39,3 +30,12 @@ class UserSchema(UserBaseSchema):
     created_at: datetime
     updated_at: datetime
     s3_path: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        try:
+            validate_email(value)
+        except EmailNotValidError:
+            raise ValueError("Invalid email format")
+        return value

@@ -6,6 +6,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 from src.config import get_settings
 from src.database import Base
+from src.users.models import Group, User
 
 sys.path.append(os.path.join(sys.path[0], "src"))
 
