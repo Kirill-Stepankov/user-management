@@ -1,8 +1,8 @@
 """Initial
 
-Revision ID: 84660e6af245
+Revision ID: 9f2b2985a96d
 Revises:
-Create Date: 2023-10-10 08:00:10.631839
+Create Date: 2023-10-13 06:11:18.042877
 
 """
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "84660e6af245"
+revision: str = "9f2b2985a96d"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         "group",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=250), nullable=False),
+        sa.Column("name", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -31,11 +31,12 @@ def upgrade() -> None:
     op.create_table(
         "user",
         sa.Column("uuid", sa.UUID(), nullable=False),
-        sa.Column("name", sa.String(length=250), nullable=False),
-        sa.Column("surname", sa.String(length=250), nullable=False),
-        sa.Column("username", sa.String(length=250), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False),
-        sa.Column("phone_number", sa.String(length=30), nullable=False),
+        sa.Column("name", sa.Text(), nullable=False),
+        sa.Column("surname", sa.Text(), nullable=False),
+        sa.Column("hashed_password", sa.Text(), nullable=False),
+        sa.Column("username", sa.Text(), nullable=False),
+        sa.Column("email", sa.Text(), nullable=False),
+        sa.Column("phone_number", sa.Text(), nullable=False),
         sa.Column(
             "role", sa.Enum("USER", "ADMIN", "MODERATOR", name="role"), nullable=False
         ),
@@ -43,7 +44,7 @@ def upgrade() -> None:
         sa.Column("is_blocked", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("s3_path", sa.String(length=2083), nullable=False),
+        sa.Column("s3_path", sa.Text(), nullable=False),
         sa.ForeignKeyConstraint(
             ["group_id"],
             ["group.id"],
