@@ -1,11 +1,15 @@
-from fastapi import Depends, FastAPI, Request
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from logs.logger import get_logger
 from typing_extensions import Annotated
 
 from . import config
 from .auth.router import router as auth_router
-from .users.exceptions import UserAlreadyExistsException
+from .users.exceptions import (
+    UserAlreadyExistsException,
+    UserDoesNotExistException,
+    UserInvalidCredentialsException,
+)
 from .users.router import router as users_router
 
 logger = get_logger()
@@ -26,8 +30,28 @@ async def info(settings: Annotated[config.Settings, Depends(config.get_settings)
 @app.exception_handler(UserAlreadyExistsException)
 async def unicorn_exception_handler(request: Request, exc: UserAlreadyExistsException):
     return JSONResponse(
-        status_code=400,
+        status_code=status.HTTP_400_BAD_REQUEST,
         content={
             "detail": f"User with '{exc.username}' username is already registered."
         },
+    )
+
+
+@app.exception_handler(UserDoesNotExistException)
+async def unicorn_exception_handler(request: Request, exc: UserDoesNotExistException):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": f"User with '{exc.username}' username isn't exist. Please register"
+        },
+    )
+
+
+@app.exception_handler(UserInvalidCredentialsException)
+async def unicorn_exception_handler(
+    request: Request, exc: UserInvalidCredentialsException
+):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": f"Invalid username or password."},
     )

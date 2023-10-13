@@ -7,7 +7,7 @@ from .utils import Role
 
 
 class UserBaseSchema(BaseModel):
-    username: str = Field(max_length=255)
+    username: str = Field(max_length=255, min_length=1)
 
 
 class UserAddSchema(UserBaseSchema):
@@ -20,9 +20,9 @@ class UserOutputSchema(UserBaseSchema):
 
 class UserSchema(UserBaseSchema):
     uuid: UUID4
-    name: str = Field(max_length=255)
-    email: str = Field(max_length=255)
-    surname: str = Field(max_length=255)
+    name: str = Field(max_length=255, min_length=1)
+    email: str = Field(max_length=255, min_length=1)
+    surname: str = Field(max_length=255, min_length=1)
     phone_number: str = Field(min_length=4, max_length=30)
     role: Role
     group_id: int
