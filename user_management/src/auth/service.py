@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from jose import jwt
+import jwt
 
 from ..config import get_settings
 from ..repository import AbstractRepository
@@ -49,14 +49,13 @@ class AuthService:
         }
 
     async def login(self, user_add: UserAddSchema) -> dict:
-        user = await self.user_repo.find(username=user_add.username)
+        user = await self.user_repo.get(username=user_add.username)
         if not user:
             raise UserDoesNotExistException(user_add.username)
 
-        user = user[0][0]
         if not HashPassword.verify_hash(user_add.hashed_password, user.hashed_password):
             raise UserInvalidCredentialsException(user.username)
 
-        payload = {"user_id": user.uuid, "username": user.username}
+        payload = {"uuid": user.uuid, "username": user.username}
 
         return self.create_tokens(payload)

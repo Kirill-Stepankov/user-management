@@ -1,11 +1,17 @@
-from fastapi import APIRouter
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends
+
+from ..auth.dependencies import authenticate
+from .models import User
+from .schemas import UserOutputSchema, UserSchema
 
 router = APIRouter(prefix="/user", tags=["users"])
 
 
-@router.get("/me")
-async def about_me():
-    pass
+@router.get("/me", response_model=UserSchema)
+async def about_me(user: Annotated[User, Depends(authenticate)]) -> Any:
+    return UserSchema.model_validate(user)
 
 
 @router.patch("/me")

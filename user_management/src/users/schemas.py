@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from email_validator import EmailNotValidError, validate_email
-from pydantic import UUID4, BaseModel, Field, field_validator
+from pydantic import UUID4, BaseModel, ConfigDict, Field, field_validator
 
 from .utils import Role
 
@@ -20,20 +20,24 @@ class UserOutputSchema(UserBaseSchema):
 
 class UserSchema(UserBaseSchema):
     uuid: UUID4
-    name: str = Field(max_length=255, min_length=1)
-    email: str = Field(max_length=255, min_length=1)
-    surname: str = Field(max_length=255, min_length=1)
-    phone_number: str = Field(min_length=4, max_length=30)
-    role: Role
-    group_id: int
+    name: str | None = Field(max_length=255, min_length=1)
+    email: str | None = None
+    surname: str | None = Field(max_length=255, min_length=1)
+    phone_number: str | None = Field(min_length=4, max_length=30)
+    role: Role | None = None
+    group_id: int | None = None
     is_blocked: bool = Field(default=False)
     created_at: datetime
     updated_at: datetime
-    s3_path: str
+    s3_path: str | None = None
+
+    model_config = ConfigDict(from_attributes=True)
 
     @field_validator("email")
     @classmethod
     def validate_email(cls, value):
+        if value is None:
+            return value
         try:
             validate_email(value)
         except EmailNotValidError:

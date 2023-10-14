@@ -10,7 +10,7 @@ class UserService:
         self.user_repo: AbstractRepository = user_repo()
 
     async def add_user(self, user: UserAddSchema) -> UserOutputSchema:
-        user_by_username = await self.user_repo.find(username=user.username)
+        user_by_username = await self.user_repo.get(username=user.username)
         if user_by_username:
             raise UserAlreadyExistsException(user.username)
 

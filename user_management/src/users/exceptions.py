@@ -11,5 +11,5 @@ class UserDoesNotExistException(UserBaseException):
     pass
 
 
-class UserInvalidCredentialsException(UserBaseException):
+class UserInvalidCredentialsException(Exception):
     pass
