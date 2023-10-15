@@ -8,6 +8,7 @@ from .auth.router import router as auth_router
 from .users.exceptions import (
     UserAlreadyExistsException,
     UserDoesNotExistException,
+    UserDoesNotHavePermission,
     UserInvalidCredentialsException,
 )
 from .users.router import router as users_router
@@ -54,4 +55,12 @@ async def unicorn_exception_handler(
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": f"Invalid username or password."},
+    )
+
+
+@app.exception_handler(UserDoesNotHavePermission)
+async def unicorn_exception_handler(request: Request, exc: UserDoesNotHavePermission):
+    return JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={"detail": f"User doesn't have permission to access this resource."},
     )

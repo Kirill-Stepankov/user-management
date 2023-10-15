@@ -13,3 +13,7 @@ class UserDoesNotExistException(UserBaseException):
 
 class UserInvalidCredentialsException(Exception):
     pass
+
+
+class UserDoesNotHavePermission(Exception):
+    pass

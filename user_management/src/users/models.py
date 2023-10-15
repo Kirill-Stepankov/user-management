@@ -30,7 +30,7 @@ class User(Base):
     phone_number: Mapped[str] = mapped_column(Text, nullable=True)
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.USER)
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"), nullable=True)
-    is_blocked: Mapped[bool] = mapped_column(Boolean, default=True)
+    is_blocked: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.utcnow, index=True
     )
