@@ -1,4 +1,3 @@
-import enum
 from functools import wraps
 from json import JSONEncoder
 from uuid import UUID
@@ -6,6 +5,7 @@ from uuid import UUID
 from passlib.context import CryptContext
 
 from .exceptions import UserDoesNotHavePermission
+from .repository import UserRepository
 
 old_default = JSONEncoder.default
 
@@ -17,13 +17,6 @@ def new_default(self, obj):
 
 
 JSONEncoder.default = new_default
-
-
-class Role(enum.Enum):
-    USER = "User"
-    ADMIN = "Admin"
-    MODERATOR = "Moderator"
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -42,8 +35,13 @@ def has_any_permissions(permissions: list[callable]):
     def inner(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
+            uuid = kwargs.get("user_id")
+            user = kwargs.get("user")
+            if uuid is not None:
+                user_repo = UserRepository()
+                user_by_uuid = await user_repo.get(uuid=uuid)
             for permission in permissions:
-                if permission(kwargs["user"]):
+                if permission(user, object=user_by_uuid):
                     return await func(*args, **kwargs)
             raise UserDoesNotHavePermission
 

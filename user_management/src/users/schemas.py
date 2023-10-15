@@ -3,7 +3,7 @@ from datetime import datetime
 from email_validator import EmailNotValidError, validate_email
 from pydantic import UUID4, BaseModel, ConfigDict, Field, field_validator
 
-from .utils import Role
+from .enums import Role
 
 
 class UserBaseSchema(BaseModel):

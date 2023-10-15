@@ -2,12 +2,15 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from pydantic import UUID4
 
 from ..auth.dependencies import authenticate
 from .dependencies import user_service
 from .models import User
+from .permissions import is_admin, is_moderator
 from .schemas import UserOutputSchema, UserSchema
 from .service import UserService
+from .utils import has_any_permissions
 
 router = APIRouter(prefix="/user", tags=["users"])
 
@@ -31,9 +34,14 @@ async def delete_me(
     return JSONResponse(content={"detail": "User is successfully deleted."})
 
 
-@router.get("/{user_id}")
-async def about_user():
-    pass
+@router.get("/{user_id}", response_model=UserSchema)
+@has_any_permissions([is_admin, is_moderator])
+async def about_user(
+    user_id: UUID4,
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+):
+    return await user_service.get_user(user_id)
 
 
 @router.patch("/{user_id}")

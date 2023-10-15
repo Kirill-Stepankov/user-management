@@ -5,7 +5,7 @@ from sqlalchemy import UUID, Boolean, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from src.database import Base
 
-from .utils import Role
+from .enums import Role
 
 
 class Group(Base):

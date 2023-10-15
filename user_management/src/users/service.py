@@ -3,7 +3,7 @@ import uuid
 from src.repository import AbstractRepository
 
 from .exceptions import UserAlreadyExistsException
-from .schemas import UserAddSchema, UserOutputSchema
+from .schemas import UserAddSchema, UserOutputSchema, UserSchema
 from .utils import HashPassword
 
 
@@ -23,3 +23,7 @@ class UserService:
 
     async def delete_user(self, uuid: uuid):
         await self.user_repo.delete(uuid=uuid)
+
+    async def get_user(self, uuid: uuid) -> UserSchema:
+        user = await self.user_repo.get(uuid=uuid)
+        return UserSchema.model_validate(user)
