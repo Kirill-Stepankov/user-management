@@ -9,7 +9,7 @@ from ..users.exceptions import (
     UserInvalidCredentialsException,
 )
 from ..users.schemas import UserAddSchema
-from ..users.utils import HashPassword
+from ..users.service import HashPassword
 
 settings = get_settings()
 
