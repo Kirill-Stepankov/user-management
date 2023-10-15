@@ -1,3 +1,5 @@
+import uuid
+
 from src.repository import AbstractRepository
 
 from .exceptions import UserAlreadyExistsException
@@ -18,3 +20,6 @@ class UserService:
         user_id = await self.user_repo.add_one(user.model_dump())
 
         return UserOutputSchema(uuid=user_id, **user.model_dump())
+
+    async def delete_user(self, uuid: uuid):
+        await self.user_repo.delete(uuid=uuid)

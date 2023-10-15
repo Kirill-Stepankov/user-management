@@ -1,6 +1,7 @@
+import uuid
 from abc import ABC, abstractmethod
 
-from sqlalchemy import insert, select
+from sqlalchemy import delete, insert, select
 
 from .database import async_session_maker
 
@@ -16,6 +17,10 @@ class AbstractRepository(ABC):
 
     @abstractmethod
     async def get():
+        raise NotImplementedError
+
+    @abstractmethod
+    async def delete():
         raise NotImplementedError
 
 
@@ -40,3 +45,9 @@ class SQLAlchemyRepository(AbstractRepository):
             stmt = select(self.model).filter_by(**filters)
             res = await session.scalars(stmt)
             return res.first()
+
+    async def delete(self, **filters):
+        async with async_session_maker() as session:
+            stmt = delete(self.model).filter_by(**filters)
+            res = await session.execute(stmt)
+            await session.commit()

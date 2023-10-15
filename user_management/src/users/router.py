@@ -1,10 +1,13 @@
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 
 from ..auth.dependencies import authenticate
+from .dependencies import user_service
 from .models import User
 from .schemas import UserOutputSchema, UserSchema
+from .service import UserService
 
 router = APIRouter(prefix="/user", tags=["users"])
 
@@ -20,8 +23,12 @@ async def edit_about():
 
 
 @router.delete("/me")
-async def delete_me():
-    pass
+async def delete_me(
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+):
+    await user_service.delete_user(user.uuid)
+    return JSONResponse(content={"detail": "User is successfully deleted."})
 
 
 @router.get("/{user_id}")
