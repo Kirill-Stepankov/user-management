@@ -1,9 +1,9 @@
-import uuid
 from abc import ABC, abstractmethod
+from typing import Any
 
 from sqlalchemy import delete, insert, select
 
-from .database import async_session_maker
+from .database import async_session_maker, init_redis_pool
 
 
 class AbstractRepository(ABC):
@@ -51,3 +51,24 @@ class SQLAlchemyRepository(AbstractRepository):
             stmt = delete(self.model).filter_by(**filters)
             res = await session.execute(stmt)
             await session.commit()
+
+
+class RedisRepository(AbstractRepository):
+    async def add_one(self, key: Any, value: Any) -> None:
+        async with init_redis_pool() as client:
+            await client.set(key, value)
+
+    async def get(self, key: Any) -> Any:
+        async with init_redis_pool() as client:
+            return await client.get(key)
+
+    async def find(self, key: Any) -> Any:
+        return await self.get(key)
+
+    async def delete(self, *keys: list[Any]) -> None:
+        async with init_redis_pool() as client:
+            await client.delete(*keys)
+
+    async def set_expiration(self, key: str, exp: int) -> None:
+        async with init_redis_pool() as client:
+            await client.expire(key, exp)
