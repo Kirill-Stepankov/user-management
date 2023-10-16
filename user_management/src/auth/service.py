@@ -69,20 +69,16 @@ class AuthService:
             raise TokenIsBlacklistedException
         payload = decode_token(token)
         uuid = payload.get("uuid")
-        exp = payload.get("exp")
         is_access = payload.get("is_access")
 
         if is_access:
             raise NotRefreshTokenException
 
-        await self.redis_repo.add_one(token, uuid)
-        await self.redis_repo.set_expiration(token, exp)
+        await self.redis_repo.add_one_with_expiration(
+            token, uuid, settings.refresh_token_timeout * 60
+        )
 
         return self.create_tokens(payload)
 
     async def token_is_blacklisted(self, token: str) -> bool:
-        uuid = await self.redis_repo.get(token)
-
-        if uuid:
-            return True
-        return False
+        return bool(await self.redis_repo.get(token))

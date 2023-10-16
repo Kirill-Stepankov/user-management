@@ -72,3 +72,8 @@ class RedisRepository(AbstractRepository):
     async def set_expiration(self, key: str, exp: int) -> None:
         async with init_redis_pool() as client:
             await client.expire(key, exp)
+
+    async def add_one_with_expiration(self, key: Any, value: Any, exp: int) -> None:
+        async with init_redis_pool() as client:
+            async with client.pipeline(transaction=True) as pipe:
+                await pipe.set(key, value).expire(key, exp).execute()
