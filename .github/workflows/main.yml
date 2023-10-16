@@ -18,7 +18,7 @@ jobs:
           docker-compose up -d
       - name: Run tests
         run: |
-          docker-compose exec -T producer python -m pytest
+          docker-compose exec -T user-management python -m pytest
   lint:
     runs-on: ubuntu-latest
     steps:
