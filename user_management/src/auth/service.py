@@ -24,14 +24,13 @@ class AuthService:
     def token(self, payload: dict, is_access: bool = True):
         to_encode = payload.copy()
 
-        if is_access:
-            expire = datetime.utcnow() + timedelta(
-                minutes=settings.access_token_timeout
+        expire = datetime.utcnow() + timedelta(
+            minutes=(
+                settings.access_token_timeout
+                if is_access
+                else settings.refresh_token_timeout
             )
-        else:
-            expire = datetime.utcnow() + timedelta(
-                minutes=settings.refresh_token_timeout
-            )
+        )
 
         to_encode.update(
             {
