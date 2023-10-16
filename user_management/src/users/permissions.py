@@ -1,6 +1,5 @@
 from .enums import Role
 from .models import User
-from .repository import UserRepository
 
 
 def is_admin(user: User, **kwargs) -> bool:

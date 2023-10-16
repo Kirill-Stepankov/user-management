@@ -1,7 +1,8 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Header, status
 
+from ..repository import RedisRepository
 from ..users.dependencies import user_service
 from ..users.schemas import UserAddSchema, UserOutputSchema
 from ..users.service import UserService
@@ -29,8 +30,11 @@ async def login(
 
 
 @router.post("/refresh-token")
-async def refresh_token():
-    pass
+async def refresh_token(
+    auth_service: Annotated[AuthService, Depends(auth_service)],
+    token: str = Header(),
+) -> dict:
+    return await auth_service.refresh_tokens(token)
 
 
 @router.post("/reset-password")

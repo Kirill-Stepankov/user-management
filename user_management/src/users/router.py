@@ -50,5 +50,13 @@ async def edit_user():
 
 
 @router.get("/")
-async def get_users():
+@has_any_permissions([is_admin, ...])
+async def get_users(
+    user: Annotated[User, Depends(authenticate)],
+    page: int | None = None,
+    limit: int | None = None,
+    filter_by_name: str | None = None,
+    sort_by: str | None = None,
+    order_by: str | None = None,
+):
     pass

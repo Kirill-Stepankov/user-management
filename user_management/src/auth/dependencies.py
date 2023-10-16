@@ -1,42 +1,32 @@
-import jwt
 from fastapi import Header, HTTPException, status
 
 from ..config import get_settings
+from ..repository import RedisRepository
+from ..users.dependencies import user_service
 from ..users.exceptions import UserInvalidCredentialsException
 from ..users.models import User
 from ..users.repository import UserRepository
+from .exceptions import TokenIsBlacklistedException
 from .service import AuthService
+from .utils import decode_token
 
 settings = get_settings()
 
 
 def auth_service():
-    return AuthService(UserRepository)
+    return AuthService(UserRepository, RedisRepository)
 
 
 async def authenticate(token: str = Header()) -> User:
-    user_repo = UserRepository()
-    if token is None:
-        raise HTTPException(status_code=401, detail="bb")
-    try:
-        payload = jwt.decode(
-            token, settings.secret_key, algorithms=[settings.crypt_algorithm]
-        )
-        uuid = payload.get("uuid")
-    except jwt.exceptions.DecodeError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token."
-        )
-    except jwt.exceptions.ExpiredSignatureError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token has expired."
-        )
-    except jwt.exceptions.PyJWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="JWT error."
-        )
+    auth_serv = auth_service()
+    user_serv = user_service()
+    is_blacklisted = await auth_serv.token_is_blacklisted(token)
+    if is_blacklisted:
+        raise TokenIsBlacklistedException
+    payload = decode_token(token)
+    uuid = payload.get("uuid")
 
-    user = await user_repo.get(uuid=uuid)
+    user = await user_serv.get_user(uuid=uuid)
 
     if user is None:
         raise UserInvalidCredentialsException

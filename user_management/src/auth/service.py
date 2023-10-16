@@ -10,13 +10,16 @@ from ..users.exceptions import (
 )
 from ..users.schemas import UserAddSchema
 from ..users.service import HashPassword
+from .exceptions import NotRefreshTokenException, TokenIsBlacklistedException
+from .utils import decode_token
 
 settings = get_settings()
 
 
 class AuthService:
-    def __init__(self, user_repo: AbstractRepository):
+    def __init__(self, user_repo: AbstractRepository, redis_repo: AbstractRepository):
         self.user_repo: AbstractRepository = user_repo()
+        self.redis_repo: AbstractRepository = redis_repo()
 
     def token(self, payload: dict, is_access: bool = True):
         to_encode = payload.copy()
@@ -59,3 +62,27 @@ class AuthService:
         payload = {"uuid": user.uuid, "username": user.username}
 
         return self.create_tokens(payload)
+
+    async def refresh_tokens(self, token: str) -> dict:
+        is_blacklisted = await self.token_is_blacklisted(token)
+        if is_blacklisted:
+            raise TokenIsBlacklistedException
+        payload = decode_token(token)
+        uuid = payload.get("uuid")
+        exp = payload.get("exp")
+        is_access = payload.get("is_access")
+
+        if is_access:
+            raise NotRefreshTokenException
+
+        await self.redis_repo.add_one(token, uuid)
+        await self.redis_repo.set_expiration(token, exp)
+
+        return self.create_tokens(payload)
+
+    async def token_is_blacklisted(self, token: str) -> bool:
+        uuid = await self.redis_repo.get(token)
+
+        if uuid:
+            return True
+        return False

@@ -4,6 +4,7 @@ from logs.logger import get_logger
 from typing_extensions import Annotated
 
 from . import config
+from .auth.exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .auth.router import router as auth_router
 from .users.exceptions import (
     UserAlreadyExistsException,
@@ -63,4 +64,20 @@ async def unicorn_exception_handler(request: Request, exc: UserDoesNotHavePermis
     return JSONResponse(
         status_code=status.HTTP_403_FORBIDDEN,
         content={"detail": f"User doesn't have permission to access this resource."},
+    )
+
+
+@app.exception_handler(NotRefreshTokenException)
+async def unicorn_exception_handler(request: Request, exc: NotRefreshTokenException):
+    return JSONResponse(
+        status_code=status.HTTP_403_FORBIDDEN,
+        content={"detail": f"Given not resresh token for refresh."},
+    )
+
+
+@app.exception_handler(TokenIsBlacklistedException)
+async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedException):
+    return JSONResponse(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        content={"detail": f"Token is blacklisted."},
     )
