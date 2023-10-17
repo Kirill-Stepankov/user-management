@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Create dotenv files
         run: |
           echo "${{ secrets.ENV_FILE }}" > user_management/.env
@@ -16,13 +16,12 @@ jobs:
       - name: Build and Run Docker containers
         run: |
           docker-compose up -d
-      - name: Run tests
-        run: |
-          docker-compose exec -T user-management python -m pytest
   lint:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Install pre-commit
         run: |
           python -m pip install pre-commit
@@ -33,6 +32,8 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
       - name: Run tests
         run: |
           docker-compose exec -T user-management python -m pytest
