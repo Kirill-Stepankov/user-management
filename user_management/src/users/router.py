@@ -46,7 +46,7 @@ async def about_user(
 
 @router.patch("/{user_id}")
 async def edit_user():
-    pass
+    ...
 
 
 @router.get("/")
