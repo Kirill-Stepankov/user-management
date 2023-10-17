@@ -1,14 +1,14 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 
 from ..auth.dependencies import authenticate
-from .dependencies import user_service
+from .dependencies import UserUpdateModel, user_service
 from .models import User
 from .permissions import is_admin, is_moderator
-from .schemas import UserOutputSchema, UserSchema
+from .schemas import UserSchema, UserUpdateSchema
 from .service import UserService
 from .utils import has_any_permissions
 
@@ -20,9 +20,14 @@ async def about_me(user: Annotated[User, Depends(authenticate)]) -> Any:
     return UserSchema.model_validate(user)
 
 
-@router.patch("/me")
-async def edit_about():
-    pass
+@router.patch("/me", response_model=UserSchema)
+async def edit_about(
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+    to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
+    file: Annotated[UploadFile, File()] = None,
+) -> Any:
+    return await user_service.patch_user(user.uuid, to_update)
 
 
 @router.delete("/me")

@@ -17,3 +17,7 @@ class UserInvalidCredentialsException(Exception):
 
 class UserDoesNotHavePermission(Exception):
     pass
+
+
+class InvalidEmailException(Exception):
+    pass

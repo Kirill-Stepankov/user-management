@@ -4,7 +4,7 @@ from passlib.context import CryptContext
 from src.repository import AbstractRepository
 
 from .exceptions import UserAlreadyExistsException
-from .schemas import UserAddSchema, UserOutputSchema, UserSchema
+from .schemas import UserAddSchema, UserOutputSchema, UserSchema, UserUpdateSchema
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -39,3 +39,12 @@ class UserService:
     async def get_user(self, uuid: uuid) -> UserSchema:
         user = await self.user_repo.get(uuid=uuid)
         return UserSchema.model_validate(user)
+
+    async def patch_user(self, uuid: uuid, to_update: UserUpdateSchema) -> UserSchema:
+        filtered = {
+            key: value
+            for key, value in to_update.model_dump().items()
+            if value is not None
+        }
+        await self.user_repo.update(uuid, **filtered)
+        return await self.get_user(uuid)

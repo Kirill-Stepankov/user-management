@@ -15,7 +15,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post(
     "/signup", response_model=UserOutputSchema, status_code=status.HTTP_201_CREATED
 )
-async def about_me(
+async def signup(
     user: UserAddSchema,
     user_service: Annotated[UserService, Depends(user_service)],
 ) -> Any:

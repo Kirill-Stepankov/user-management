@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Annotated
 
 from email_validator import EmailNotValidError, validate_email
 from pydantic import UUID4, BaseModel, ConfigDict, Field, field_validator
@@ -16,6 +17,14 @@ class UserAddSchema(UserBaseSchema):
 
 class UserOutputSchema(UserBaseSchema):
     uuid: UUID4
+
+
+class UserUpdateSchema(UserBaseSchema):
+    username: str | None = None
+    name: str | None = None
+    email: str | None = None
+    surname: str | None = None
+    phone_number: str | None = None
 
 
 class UserSchema(UserBaseSchema):

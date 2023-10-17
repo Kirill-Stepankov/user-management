@@ -7,6 +7,7 @@ from . import config
 from .auth.exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .auth.router import router as auth_router
 from .users.exceptions import (
+    InvalidEmailException,
     UserAlreadyExistsException,
     UserDoesNotExistException,
     UserDoesNotHavePermission,
@@ -80,4 +81,12 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
     return JSONResponse(
         status_code=status.HTTP_401_UNAUTHORIZED,
         content={"detail": f"Token is blacklisted."},
+    )
+
+
+@app.exception_handler(InvalidEmailException)
+async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedException):
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": f"Invalid email format."},
     )
