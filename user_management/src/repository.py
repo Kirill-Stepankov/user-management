@@ -1,27 +1,9 @@
-from abc import ABC, abstractmethod
 from typing import Any
 
-from sqlalchemy import delete, insert, select
+from sqlalchemy import delete, insert, select, update
 
+from .abstract import AbstractRepository
 from .database import async_session_maker, init_redis_pool
-
-
-class AbstractRepository(ABC):
-    @abstractmethod
-    async def add_one():
-        raise NotImplementedError
-
-    @abstractmethod
-    async def find():
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get():
-        raise NotImplementedError
-
-    @abstractmethod
-    async def delete():
-        raise NotImplementedError
 
 
 class SQLAlchemyRepository(AbstractRepository):
@@ -46,10 +28,16 @@ class SQLAlchemyRepository(AbstractRepository):
             res = await session.scalars(stmt)
             return res.first()
 
-    async def delete(self, **filters):
+    async def delete(self, **filters) -> None:
         async with async_session_maker() as session:
             stmt = delete(self.model).filter_by(**filters)
             res = await session.execute(stmt)
+            await session.commit()
+
+    async def update(self, uuid: str, **values) -> None:
+        async with async_session_maker() as session:
+            stmt = update(self.model).where(self.model.uuid == uuid).values(**values)
+            await session.execute(stmt)
             await session.commit()
 
 
