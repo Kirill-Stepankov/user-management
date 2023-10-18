@@ -1,8 +1,8 @@
-"""Initial
+"""Email isn't unique
 
-Revision ID: 84660e6af245
+Revision ID: 2604bb929dc2
 Revises:
-Create Date: 2023-10-10 08:00:10.631839
+Create Date: 2023-10-13 13:19:52.443769
 
 """
 from typing import Sequence, Union
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = "84660e6af245"
+revision: str = "2604bb929dc2"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -22,7 +22,7 @@ def upgrade() -> None:
     op.create_table(
         "group",
         sa.Column("id", sa.Integer(), nullable=False),
-        sa.Column("name", sa.String(length=250), nullable=False),
+        sa.Column("name", sa.Text(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
@@ -31,19 +31,20 @@ def upgrade() -> None:
     op.create_table(
         "user",
         sa.Column("uuid", sa.UUID(), nullable=False),
-        sa.Column("name", sa.String(length=250), nullable=False),
-        sa.Column("surname", sa.String(length=250), nullable=False),
-        sa.Column("username", sa.String(length=250), nullable=False),
-        sa.Column("email", sa.String(length=255), nullable=False),
-        sa.Column("phone_number", sa.String(length=30), nullable=False),
+        sa.Column("name", sa.Text(), nullable=True),
+        sa.Column("surname", sa.Text(), nullable=True),
+        sa.Column("hashed_password", sa.Text(), nullable=True),
+        sa.Column("username", sa.Text(), nullable=False),
+        sa.Column("email", sa.Text(), nullable=False),
+        sa.Column("phone_number", sa.Text(), nullable=True),
         sa.Column(
             "role", sa.Enum("USER", "ADMIN", "MODERATOR", name="role"), nullable=False
         ),
-        sa.Column("group_id", sa.Integer(), nullable=False),
+        sa.Column("group_id", sa.Integer(), nullable=True),
         sa.Column("is_blocked", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.Column("s3_path", sa.String(length=2083), nullable=False),
+        sa.Column("s3_path", sa.Text(), nullable=True),
         sa.ForeignKeyConstraint(
             ["group_id"],
             ["group.id"],
@@ -51,7 +52,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("uuid"),
     )
     op.create_index(op.f("ix_user_created_at"), "user", ["created_at"], unique=False)
-    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
+    op.create_index(op.f("ix_user_email"), "user", ["email"], unique=False)
     op.create_index(op.f("ix_user_username"), "user", ["username"], unique=True)
     # ### end Alembic commands ###
 

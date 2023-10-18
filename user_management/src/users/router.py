@@ -1,0 +1,67 @@
+from typing import Annotated, Any
+
+from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi.responses import JSONResponse
+from pydantic import UUID4
+
+from ..auth.dependencies import authenticate
+from .dependencies import UserUpdateModel, user_service
+from .models import User
+from .permissions import is_admin, is_moderator
+from .schemas import UserSchema, UserUpdateSchema
+from .service import UserService
+from .utils import has_any_permissions
+
+router = APIRouter(prefix="/user", tags=["users"])
+
+
+@router.get("/me", response_model=UserSchema)
+async def about_me(user: Annotated[User, Depends(authenticate)]) -> Any:
+    return UserSchema.model_validate(user)
+
+
+@router.patch("/me", response_model=UserSchema)
+async def edit_about(
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+    to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
+    file: Annotated[UploadFile, File()] = None,
+) -> Any:
+    return await user_service.patch_user(user.uuid, to_update)
+
+
+@router.delete("/me")
+async def delete_me(
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+):
+    await user_service.delete_user(user.uuid)
+    return JSONResponse(content={"detail": "User is successfully deleted."})
+
+
+@router.get("/{user_id}", response_model=UserSchema)
+@has_any_permissions([is_admin, is_moderator])
+async def about_user(
+    user_id: UUID4,
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+):
+    return await user_service.get_user(user_id)
+
+
+@router.patch("/{user_id}")
+async def edit_user():
+    ...
+
+
+@router.get("/")
+@has_any_permissions([is_admin, ...])
+async def get_users(
+    user: Annotated[User, Depends(authenticate)],
+    page: int | None = None,
+    limit: int | None = None,
+    filter_by_name: str | None = None,
+    sort_by: str | None = None,
+    order_by: str | None = None,
+):
+    pass
