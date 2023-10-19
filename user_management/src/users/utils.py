@@ -1,8 +1,10 @@
+from datetime import datetime
 from functools import wraps
 from json import JSONEncoder
 from uuid import UUID
 
 from .dependencies import user_service
+from .enums import Role
 from .exceptions import UserDoesNotHavePermission
 
 old_default = JSONEncoder.default
@@ -10,6 +12,10 @@ old_default = JSONEncoder.default
 
 def new_default(self, obj):
     if isinstance(obj, UUID):
+        return str(obj)
+    if isinstance(obj, Role):
+        return obj.value
+    if isinstance(obj, datetime):
         return str(obj)
     return old_default(self, obj)
 
@@ -23,6 +29,7 @@ def has_any_permissions(permissions: list[callable]):
         async def wrapper(*args, **kwargs):
             uuid = kwargs.get("user_id")
             user = kwargs.get("user")
+            user_by_uuid = None
             if uuid is not None:
                 user_serv = user_service()
                 user_by_uuid = await user_serv.get_user(uuid)

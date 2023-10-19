@@ -27,6 +27,11 @@ class UserUpdateSchema(UserBaseSchema):
     phone_number: str | None = None
 
 
+class UserUpdateByAdminSchema(UserUpdateSchema):
+    role: Role | None = None
+    is_blocked: bool | None = Field(default=False)
+
+
 class UserSchema(UserBaseSchema):
     uuid: UUID4
     name: str | None = Field(max_length=255, min_length=1)

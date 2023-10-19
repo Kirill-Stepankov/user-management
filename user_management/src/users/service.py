@@ -3,8 +3,16 @@ import uuid
 from passlib.context import CryptContext
 from src.repository import AbstractRepository
 
+from .enums import Role
 from .exceptions import UserAlreadyExistsException
-from .schemas import UserAddSchema, UserOutputSchema, UserSchema, UserUpdateSchema
+from .models import User
+from .schemas import (
+    UserAddSchema,
+    UserOutputSchema,
+    UserSchema,
+    UserUpdateByAdminSchema,
+    UserUpdateSchema,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -40,7 +48,9 @@ class UserService:
         user = await self.user_repo.get(uuid=uuid)
         return UserSchema.model_validate(user)
 
-    async def patch_user(self, uuid: uuid, to_update: UserUpdateSchema) -> UserSchema:
+    async def patch_user(
+        self, uuid: uuid, to_update: UserUpdateSchema | UserUpdateByAdminSchema
+    ) -> UserSchema:
         filtered = {
             key: value
             for key, value in to_update.model_dump().items()
@@ -48,3 +58,20 @@ class UserService:
         }
         await self.user_repo.update(uuid, **filtered)
         return await self.get_user(uuid)
+
+    async def get_users(
+        self,
+        owner: User,
+        page: int,
+        limit: int,
+        filter_by_name: str,
+        sort_by: str,
+        order_by: str,
+    ) -> list[dict]:
+        is_admin = owner.role == Role.ADMIN
+        group_id = owner.group_id
+
+        users = await self.user_repo.find(
+            page, limit, filter_by_name, sort_by, order_by, is_admin, group_id=group_id
+        )
+        return [UserSchema.model_validate(user).model_dump() for user in users]

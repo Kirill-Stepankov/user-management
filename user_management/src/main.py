@@ -90,3 +90,24 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": f"Invalid email format."},
     )
+
+
+import boto3
+
+endpoint_url = "http://localstack:4566"
+# alternatively, to use HTTPS endpoint on port 443:
+# endpoint_url = "https://localhost.localstack.cloud"
+
+
+def test():
+    client = boto3.client(
+        "s3",
+        endpoint_url=endpoint_url,
+        aws_access_key_id="test",
+        aws_secret_access_key="test",
+    )
+    result = client.get_bucket_location(Bucket="pic-storage")
+    print(result)
+
+
+test()

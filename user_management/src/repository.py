@@ -1,6 +1,6 @@
 from typing import Any
 
-from sqlalchemy import delete, insert, select, update
+from sqlalchemy import delete, desc, insert, inspect, select, update
 
 from .abstract import AbstractRepository
 from .database import async_session_maker, init_redis_pool
@@ -16,9 +16,24 @@ class SQLAlchemyRepository(AbstractRepository):
             await session.commit()
             return res.scalar_one()
 
-    async def find(self, **filters) -> list[model]:
+    async def find(
+        self, page, limit, filter_by_name, sort_by, order_by, is_admin, **filters
+    ) -> list[model]:
         async with async_session_maker() as session:
-            stmt = select(self.model).filter_by(**filters)
+            columns = {column.name for column in inspect(self.model).columns}
+            columns.remove("hashed_password")
+            sort_by = sort_by if sort_by in columns else "username"
+            is_desc = order_by == "desc"
+
+            stmt = (
+                select(self.model)
+                .where(self.model.username.icontains(filter_by_name or ""))
+                .order_by(desc(sort_by) if is_desc else sort_by)
+            )
+            if not is_admin:
+                stmt = stmt.filter_by(**filters)
+
+            stmt = stmt.limit(limit).offset(limit * (page - 1))
             res = await session.scalars(stmt)
             return res.all()
 
