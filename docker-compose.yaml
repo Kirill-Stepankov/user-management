@@ -41,12 +41,13 @@ services:
       - SERVICES=s3,ses
       - DEBUG=${DEBUG- }
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - HOSTNAME=localstac
+      - HOSTNAME=localstack
     volumes:
-      - ./data:/tmp/localstack
+      - localstack-data:/tmp/localstack
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./user_management/localstack-script.sh:/etc/localstack/init/ready.d/script.sh
 
 volumes:
   postgres_data:
   redis_data:
+  localstack-data:

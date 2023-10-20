@@ -22,14 +22,6 @@ app.include_router(auth_router)
 app.include_router(users_router)
 
 
-@app.get("/healthcare")
-async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
-    logger.warning("TEST")
-    return {
-        "app_name": settings.logger_config_path,
-    }
-
-
 @app.exception_handler(UserAlreadyExistsException)
 async def unicorn_exception_handler(request: Request, exc: UserAlreadyExistsException):
     return JSONResponse(
@@ -92,22 +84,24 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
     )
 
 
-import boto3
+import aioboto3
 
+session = aioboto3.Session()
 endpoint_url = "http://localstack:4566"
-# alternatively, to use HTTPS endpoint on port 443:
-# endpoint_url = "https://localhost.localstack.cloud"
 
 
-def test():
-    client = boto3.client(
+@app.get("/healthcare")
+async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
+    logger.warning("TEST")
+
+    async with session.client(
         "s3",
         endpoint_url=endpoint_url,
         aws_access_key_id="test",
         aws_secret_access_key="test",
-    )
-    result = client.get_bucket_location(Bucket="pic-storage")
-    print(result)
-
-
-test()
+    ) as s3:
+        inf = await s3.get_bucket_location(Bucket="pic-storage")
+        print(inf)
+    return {
+        "app_name": settings.logger_config_path,
+    }

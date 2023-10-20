@@ -1,7 +1,9 @@
 import uuid
 
+import botocore
+from fastapi import UploadFile
 from passlib.context import CryptContext
-from src.repository import AbstractRepository
+from src.repository import AbstractRepository, S3_repository
 
 from .enums import Role
 from .exceptions import UserAlreadyExistsException
@@ -28,8 +30,9 @@ class HashPassword:
 
 
 class UserService:
-    def __init__(self, user_repo: AbstractRepository):
+    def __init__(self, user_repo: AbstractRepository, s3_repo: AbstractRepository):
         self.user_repo: AbstractRepository = user_repo()
+        self.s3_repo: AbstractRepository = s3_repo()
 
     async def add_user(self, user: UserAddSchema) -> UserOutputSchema:
         user_by_username = await self.user_repo.get(username=user.username)
@@ -49,14 +52,30 @@ class UserService:
         return UserSchema.model_validate(user)
 
     async def patch_user(
-        self, uuid: uuid, to_update: UserUpdateSchema | UserUpdateByAdminSchema
+        self,
+        uuid: uuid,
+        to_update: UserUpdateSchema | UserUpdateByAdminSchema,
+        file: bytes,
     ) -> UserSchema:
         filtered = {
             key: value
             for key, value in to_update.model_dump().items()
             if value is not None
         }
+        if file:
+            filtered["s3_path"] = str(uuid)
+
+        is_exists = True
+        try:
+            await self.s3_repo.get(str(uuid))
+        except botocore.exceptions.ClientError:
+            is_exists = False
+
+        if is_exists:
+            await self.s3_repo.delete(str(uuid))
+
         await self.user_repo.update(uuid, **filtered)
+        await self.s3_repo.add_one(file, str(uuid))
         return await self.get_user(uuid)
 
     async def get_users(

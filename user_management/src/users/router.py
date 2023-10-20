@@ -25,9 +25,9 @@ async def edit_about(
     user: Annotated[User, Depends(authenticate)],
     user_service: Annotated[UserService, Depends(user_service)],
     to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
-    file: Annotated[UploadFile, File()] = None,
+    file: Annotated[bytes, File()] = None,
 ) -> Any:
-    return await user_service.patch_user(user.uuid, to_update)
+    return await user_service.patch_user(user.uuid, to_update, file)
 
 
 @router.delete("/me")
