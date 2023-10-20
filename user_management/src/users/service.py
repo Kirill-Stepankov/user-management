@@ -64,7 +64,6 @@ class UserService:
             for key, value in to_update.model_dump().items()
             if value is not None
         }
-        print(bool(file))
         if file:
             filtered["s3_path"] = str(uuid)
 

@@ -84,7 +84,7 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
     )
 
 
-@app.get("/healthcare")
+@app.get("/healthcheck")
 async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
     logger.warning("TEST")
 
