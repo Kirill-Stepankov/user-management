@@ -11,7 +11,7 @@ from ..users.exceptions import (
 from ..users.schemas import ResetPasswordSchema, UserAddSchema
 from ..users.service import HashPassword
 from .exceptions import NotRefreshTokenException, TokenIsBlacklistedException
-from .utils import decode_token
+from .utils import decode_token, send_reset_pass_email
 
 settings = get_settings()
 
@@ -93,7 +93,7 @@ class AuthService:
 
         token = self.encode_token(payload={"uuid": user.uuid}, expire=expire)
 
-        # send email ...
+        await send_reset_pass_email(email.email, token)
 
     async def reset_password(self, passwords: ResetPasswordSchema, token: str):
         payload = decode_token(token)

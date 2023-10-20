@@ -4,7 +4,7 @@ from sqlalchemy import delete, desc, insert, inspect, select, update
 
 from .abstract import AbstractRepository
 from .config import get_settings
-from .database import async_session_maker, init_redis_pool, s3_client
+from .database import async_session_maker, aws_client, init_redis_pool
 
 settings = get_settings()
 
@@ -87,15 +87,15 @@ class RedisRepository(AbstractRepository):
 
 class S3_repository(AbstractRepository):
     async def add_one(self, body: bytes, key: str):
-        async with s3_client() as s3:
+        async with aws_client("s3") as s3:
             await s3.put_object(Body=body, Bucket=settings.s3_bucket_name, Key=key)
 
     async def delete(self, key: str):
-        async with s3_client() as s3:
+        async with aws_client("s3") as s3:
             await s3.delete_object(Bucket=settings.s3_bucket_name, Key=key)
 
     async def get(self, key: str):
-        async with s3_client() as s3:
+        async with aws_client("s3") as s3:
             return await s3.get_object(Bucket=settings.s3_bucket_name, Key=key)
 
     async def find(self, key: str):

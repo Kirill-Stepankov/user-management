@@ -39,11 +39,12 @@ session = aioboto3.Session()
 
 
 @asynccontextmanager
-async def s3_client():
+async def aws_client(service):
     async with session.client(
-        "s3",
+        service,
         endpoint_url=settings.localstack_endpoint_url,
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
+        region_name="us-east-1",
     ) as s3:
         yield s3

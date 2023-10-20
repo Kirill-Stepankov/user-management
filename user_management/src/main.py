@@ -84,24 +84,10 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
     )
 
 
-import aioboto3
-
-session = aioboto3.Session()
-endpoint_url = "http://localstack:4566"
-
-
 @app.get("/healthcare")
 async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
     logger.warning("TEST")
 
-    async with session.client(
-        "s3",
-        endpoint_url=endpoint_url,
-        aws_access_key_id="test",
-        aws_secret_access_key="test",
-    ) as s3:
-        inf = await s3.get_bucket_location(Bucket="pic-storage")
-        print(inf)
     return {
         "app_name": settings.logger_config_path,
     }

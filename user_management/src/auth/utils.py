@@ -1,5 +1,6 @@
 import jwt
 from fastapi import HTTPException, status
+from src.database import aws_client
 
 from ..config import get_settings
 
@@ -27,3 +28,16 @@ def decode_token(token: str) -> dict:
         )
 
     return payload
+
+
+async def send_reset_pass_email(recipient, token):
+    async with aws_client("ses") as ses:
+        link = settings.reset_pass_url + "?" + token
+        await ses.send_email(
+            Source="kirillstepankov17@gmail.com",
+            Destination={"ToAddresses": [recipient]},
+            Message={
+                "Subject": {"Data": "Reset password"},
+                "Body": {"Text": {"Data": link}},
+            },
+        )
