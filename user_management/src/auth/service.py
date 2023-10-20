@@ -8,7 +8,7 @@ from ..users.exceptions import (
     UserDoesNotExistException,
     UserInvalidCredentialsException,
 )
-from ..users.schemas import UserAddSchema
+from ..users.schemas import ResetPasswordSchema, UserAddSchema
 from ..users.service import HashPassword
 from .exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .utils import decode_token
@@ -21,8 +21,19 @@ class AuthService:
         self.user_repo: AbstractRepository = user_repo()
         self.redis_repo: AbstractRepository = redis_repo()
 
+    def encode_token(self, payload: dict, expire):
+        to_encode = payload.copy()
+        to_encode.update({"exp": expire})
+
+        encoded_token = jwt.encode(
+            to_encode, settings.secret_key, algorithm=settings.crypt_algorithm
+        )
+
+        return encoded_token
+
     def token(self, payload: dict, is_access: bool = True):
         to_encode = payload.copy()
+        to_encode.update({"is_access": is_access})
 
         expire = datetime.utcnow() + timedelta(
             minutes=(
@@ -32,15 +43,7 @@ class AuthService:
             )
         )
 
-        to_encode.update(
-            {
-                "exp": expire,
-                "is_access": is_access,
-            }
-        )
-        encoded_jwt = jwt.encode(
-            to_encode, settings.secret_key, algorithm=settings.crypt_algorithm
-        )
+        encoded_jwt = self.encode_token(to_encode, expire)
 
         return encoded_jwt
 
@@ -81,3 +84,21 @@ class AuthService:
 
     async def token_is_blacklisted(self, token: str) -> bool:
         return bool(await self.redis_repo.get(token))
+
+    async def send_reset_request(self, email):
+        user = await self.user_repo.get(email=email.email)
+        if not user:
+            raise UserDoesNotExistException("None")
+        expire = datetime.utcnow() + timedelta(minutes=15)
+
+        token = self.encode_token(payload={"uuid": user.uuid}, expire=expire)
+
+        # send email ...
+
+    async def reset_password(self, passwords: ResetPasswordSchema, token: str):
+        payload = decode_token(token)
+
+        uuid = payload.get("uuid")
+
+        new_password = HashPassword.create_hash(passwords.password)
+        await self.user_repo.update(uuid, hashed_password=new_password)

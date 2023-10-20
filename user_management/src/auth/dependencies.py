@@ -26,8 +26,11 @@ async def authenticate(token: str = Header()) -> User:
     payload = decode_token(token)
     uuid = payload.get("uuid")
 
-    user = await user_serv.get_user(uuid=uuid)
+    is_access = payload.get("is_access")
+    if is_access is None:
+        raise UserInvalidCredentialsException
 
+    user = await user_serv.get_user(uuid=uuid)
     if user is None:
         raise UserInvalidCredentialsException
 

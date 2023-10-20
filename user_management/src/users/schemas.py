@@ -32,7 +32,22 @@ class UserUpdateByAdminSchema(UserUpdateSchema):
     is_blocked: bool | None = Field(default=False)
 
 
-class UserSchema(UserBaseSchema):
+class EmailSchema(BaseModel):
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value):
+        if value is None:
+            return value
+        try:
+            validate_email(value)
+        except EmailNotValidError:
+            raise ValueError("Invalid email format")
+        return value
+
+
+class UserSchema(UserBaseSchema, EmailSchema):
     uuid: UUID4
     name: str | None = Field(max_length=255, min_length=1)
     email: str | None = None
@@ -47,13 +62,15 @@ class UserSchema(UserBaseSchema):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("email")
+
+class ResetPasswordSchema(BaseModel):
+    password: str = Field(min_length=8)
+    repeat_password: str = Field(min_length=8)
+
+    @field_validator("repeat_password")
     @classmethod
-    def validate_email(cls, value):
-        if value is None:
-            return value
-        try:
-            validate_email(value)
-        except EmailNotValidError:
-            raise ValueError("Invalid email format")
+    def validate_pass(cls, value, values):
+        passw = values.data.get("password")
+        if value != passw:
+            raise ValueError("Passwords aren't equal.")
         return value
