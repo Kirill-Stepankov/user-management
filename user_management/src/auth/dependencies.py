@@ -31,8 +31,6 @@ async def authenticate(token: str = Header()) -> User:
         raise UserInvalidCredentialsException
 
     user = await user_serv.get_user(uuid=uuid)
-    print("sssssssssssssss")
-    print(user)
     if user is None:
         raise UserInvalidCredentialsException
 
