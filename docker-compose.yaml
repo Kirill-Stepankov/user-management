@@ -34,6 +34,8 @@ services:
     container_name: localstack
     image: localstack/localstack:2.3
     hostname: localstack
+    env_file:
+      - user_management/.env
     ports:
       - "4566-4599:4566-4599"
       - 8080:8080
@@ -41,12 +43,13 @@ services:
       - SERVICES=s3,ses
       - DEBUG=${DEBUG- }
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - HOSTNAME=localstac
+      - HOSTNAME=localstack
     volumes:
-      - ./data:/tmp/localstack
+      - localstack-data:/tmp/localstack
       - "/var/run/docker.sock:/var/run/docker.sock"
-      - ./bin:/docker-entrypoint-initaws.d
+      - ./user_management/localstack-script.sh:/etc/localstack/init/ready.d/script.sh
 
 volumes:
   postgres_data:
   redis_data:
+  localstack-data:

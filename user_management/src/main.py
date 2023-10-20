@@ -22,14 +22,6 @@ app.include_router(auth_router)
 app.include_router(users_router)
 
 
-@app.get("/healthcare")
-async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
-    logger.warning("TEST")
-    return {
-        "app_name": settings.logger_config_path,
-    }
-
-
 @app.exception_handler(UserAlreadyExistsException)
 async def unicorn_exception_handler(request: Request, exc: UserAlreadyExistsException):
     return JSONResponse(
@@ -90,3 +82,12 @@ async def unicorn_exception_handler(request: Request, exc: TokenIsBlacklistedExc
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={"detail": f"Invalid email format."},
     )
+
+
+@app.get("/healthcheck")
+async def info(settings: Annotated[config.Settings, Depends(config.get_settings)]):
+    logger.warning("TEST")
+
+    return {
+        "app_name": settings.logger_config_path,
+    }

@@ -1,16 +1,18 @@
 from typing import Annotated
 
 from email_validator import EmailNotValidError, validate_email
-from fastapi import Form
+from fastapi import Depends, Form
+from src.repository import S3_repository
 
+from .enums import Role
 from .exceptions import InvalidEmailException
 from .repository import UserRepository
-from .schemas import UserUpdateSchema
+from .schemas import UserUpdateByAdminSchema, UserUpdateSchema
 from .service import UserService
 
 
 def user_service():
-    return UserService(UserRepository)
+    return UserService(UserRepository, S3_repository)
 
 
 def UserUpdateModel(
@@ -32,4 +34,14 @@ def UserUpdateModel(
         email=email,
         surname=surname,
         phone_number=phone_number,
+    )
+
+
+def UserUpdateByAdminModel(
+    user_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
+    role: Annotated[Role | None, Form()] = None,
+    is_blocked: Annotated[bool | None, Form()] = None,
+):
+    return UserUpdateByAdminSchema(
+        **user_update.model_dump(), role=role, is_blocked=is_blocked
     )

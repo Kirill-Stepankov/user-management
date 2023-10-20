@@ -14,6 +14,13 @@ class Settings(BaseSettings):
     access_token_timeout: int
     refresh_token_timeout: int
     crypt_algorithm: str
+    localstack_endpoint_url: str
+    s3_bucket_name: str
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    email_identity: str
+    reset_pass_url: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, AsyncIterator
 
+import aioboto3
 from redis.asyncio import ConnectionPool, Redis
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
@@ -32,3 +33,18 @@ async def init_redis_pool() -> AsyncIterator[Redis]:
     client = Redis.from_pool(pool)
     yield client
     await client.close()
+
+
+session = aioboto3.Session()
+
+
+@asynccontextmanager
+async def aws_client(service):
+    async with session.client(
+        service,
+        endpoint_url=settings.localstack_endpoint_url,
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        region_name="us-east-1",
+    ) as s3:
+        yield s3

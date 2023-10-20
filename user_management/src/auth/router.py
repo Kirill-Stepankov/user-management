@@ -1,10 +1,16 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Query, status
+from fastapi.responses import JSONResponse
 
 from ..repository import RedisRepository
 from ..users.dependencies import user_service
-from ..users.schemas import UserAddSchema, UserOutputSchema
+from ..users.schemas import (
+    EmailSchema,
+    ResetPasswordSchema,
+    UserAddSchema,
+    UserOutputSchema,
+)
 from ..users.service import UserService
 from .dependencies import auth_service
 from .service import AuthService
@@ -37,6 +43,24 @@ async def refresh_token(
     return await auth_service.refresh_tokens(token)
 
 
-@router.post("/reset-password")
-async def reset_password():
-    pass
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(
+    auth_service: Annotated[AuthService, Depends(auth_service)], email: EmailSchema
+):
+    await auth_service.send_reset_request(email)
+    return JSONResponse(
+        content={"detail": "Email is sent."}, status_code=status.HTTP_200_OK
+    )
+
+
+@router.post("/change-password")
+async def change_password(
+    token: Annotated[str, Query()],
+    passwords: ResetPasswordSchema,
+    auth_service: Annotated[AuthService, Depends(auth_service)],
+):
+    await auth_service.reset_password(passwords, token)
+
+    return JSONResponse(
+        content={"detail": "Password is changed."}, status_code=status.HTTP_201_CREATED
+    )

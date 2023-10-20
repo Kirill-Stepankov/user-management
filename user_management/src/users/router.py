@@ -1,14 +1,14 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 
 from ..auth.dependencies import authenticate
-from .dependencies import UserUpdateModel, user_service
+from .dependencies import UserUpdateByAdminModel, UserUpdateModel, user_service
 from .models import User
-from .permissions import is_admin, is_moderator
-from .schemas import UserSchema, UserUpdateSchema
+from .permissions import is_admin, is_moderator, is_users_moderator
+from .schemas import UserSchema, UserUpdateByAdminSchema, UserUpdateSchema
 from .service import UserService
 from .utils import has_any_permissions
 
@@ -25,9 +25,9 @@ async def edit_about(
     user: Annotated[User, Depends(authenticate)],
     user_service: Annotated[UserService, Depends(user_service)],
     to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
-    file: Annotated[UploadFile, File()] = None,
+    file: Annotated[bytes, File()] = None,
 ) -> Any:
-    return await user_service.patch_user(user.uuid, to_update)
+    return await user_service.patch_user(user.uuid, to_update, file)
 
 
 @router.delete("/me")
@@ -40,7 +40,7 @@ async def delete_me(
 
 
 @router.get("/{user_id}", response_model=UserSchema)
-@has_any_permissions([is_admin, is_moderator])
+@has_any_permissions([is_admin, is_users_moderator])
 async def about_user(
     user_id: UUID4,
     user: Annotated[User, Depends(authenticate)],
@@ -50,18 +50,31 @@ async def about_user(
 
 
 @router.patch("/{user_id}")
-async def edit_user():
-    ...
+@has_any_permissions([is_admin])
+async def edit_user(
+    user_id: UUID4,
+    user: Annotated[User, Depends(authenticate)],
+    user_service: Annotated[UserService, Depends(user_service)],
+    to_update: Annotated[
+        UserUpdateByAdminSchema, Depends(UserUpdateByAdminModel)
+    ] = None,
+    file: Annotated[bytes, File()] = None,
+):
+    return await user_service.patch_user(user_id, file)
 
 
 @router.get("/")
-@has_any_permissions([is_admin, ...])
+@has_any_permissions([is_admin, is_moderator])
 async def get_users(
     user: Annotated[User, Depends(authenticate)],
-    page: int | None = None,
-    limit: int | None = None,
-    filter_by_name: str | None = None,
-    sort_by: str | None = None,
-    order_by: str | None = None,
+    user_service: Annotated[UserService, Depends(user_service)],
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1)] = 30,
+    filter_by_name: Annotated[str, Query()] = None,
+    sort_by: Annotated[str, Query()] = "username",
+    order_by: Annotated[str, Query()] = "asc",
 ):
-    pass
+    users = await user_service.get_users(
+        user, page, limit, filter_by_name, sort_by, order_by
+    )
+    return JSONResponse(content={"items": users, "page": page, "limit": limit})
