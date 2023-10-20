@@ -58,9 +58,9 @@ async def edit_user(
     to_update: Annotated[
         UserUpdateByAdminSchema, Depends(UserUpdateByAdminModel)
     ] = None,
-    file: Annotated[UploadFile, File()] = None,
+    file: Annotated[bytes, File()] = None,
 ):
-    return await user_service.patch_user(user_id, to_update)
+    return await user_service.patch_user(user_id, file)
 
 
 @router.get("/")
