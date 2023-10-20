@@ -6,7 +6,7 @@ from passlib.context import CryptContext
 from src.repository import AbstractRepository, S3_repository
 
 from .enums import Role
-from .exceptions import UserAlreadyExistsException
+from .exceptions import UserAlreadyExistsException, UserDoesNotExistException
 from .models import User
 from .schemas import (
     UserAddSchema,
@@ -49,6 +49,8 @@ class UserService:
 
     async def get_user(self, uuid: uuid) -> UserSchema:
         user = await self.user_repo.get(uuid=uuid)
+        if user is None:
+            raise UserDoesNotExistException("None")
         return UserSchema.model_validate(user)
 
     async def patch_user(
@@ -62,6 +64,7 @@ class UserService:
             for key, value in to_update.model_dump().items()
             if value is not None
         }
+        print(bool(file))
         if file:
             filtered["s3_path"] = str(uuid)
 

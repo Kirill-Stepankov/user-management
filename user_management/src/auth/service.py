@@ -99,6 +99,9 @@ class AuthService:
         payload = decode_token(token)
 
         uuid = payload.get("uuid")
+        user = await self.user_repo.get(uuid=uuid)
+        if user is None:
+            raise UserDoesNotExistException("None")
 
         new_password = HashPassword.create_hash(passwords.password)
         await self.user_repo.update(uuid, hashed_password=new_password)
