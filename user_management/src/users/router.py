@@ -1,15 +1,15 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
 
 from ..auth.dependencies import authenticate
-from .dependencies import UserUpdateByAdminModel, UserUpdateModel, user_service
+from .dependencies import UserUpdateByAdminModel, UserUpdateModel
 from .models import User
 from .permissions import is_admin, is_moderator, is_users_moderator
 from .schemas import UserSchema, UserUpdateByAdminSchema, UserUpdateSchema
-from .service import UserService
+from .service import AbstractUserService
 from .utils import has_any_permissions
 
 router = APIRouter(prefix="/user", tags=["users"])
@@ -23,7 +23,7 @@ async def about_me(user: Annotated[User, Depends(authenticate)]) -> Any:
 @router.patch("/me", response_model=UserSchema)
 async def edit_about(
     user: Annotated[User, Depends(authenticate)],
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
     to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
     file: Annotated[bytes, File()] = None,
 ) -> Any:
@@ -33,7 +33,7 @@ async def edit_about(
 @router.delete("/me")
 async def delete_me(
     user: Annotated[User, Depends(authenticate)],
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
 ):
     await user_service.delete_user(user.uuid)
     return JSONResponse(content={"detail": "User is successfully deleted."})
@@ -44,7 +44,7 @@ async def delete_me(
 async def about_user(
     user_id: UUID4,
     user: Annotated[User, Depends(authenticate)],
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
 ):
     return await user_service.get_user(user_id)
 
@@ -54,7 +54,7 @@ async def about_user(
 async def edit_user(
     user_id: UUID4,
     user: Annotated[User, Depends(authenticate)],
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
     to_update: Annotated[
         UserUpdateByAdminSchema, Depends(UserUpdateByAdminModel)
     ] = None,
@@ -67,7 +67,7 @@ async def edit_user(
 @has_any_permissions([is_admin, is_moderator])
 async def get_users(
     user: Annotated[User, Depends(authenticate)],
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
     page: Annotated[int, Query(ge=1)] = 1,
     limit: Annotated[int, Query(ge=1)] = 30,
     filter_by_name: Annotated[str, Query()] = None,

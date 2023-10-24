@@ -1,3 +1,4 @@
+from abc import ABC
 from datetime import datetime, timedelta
 
 import jwt
@@ -16,9 +17,13 @@ from .utils import decode_token, send_reset_pass_email
 settings = get_settings()
 
 
-class AuthService:
+class AbstractAuthService(ABC):
+    pass
+
+
+class AuthService(AbstractAuthService):
     def __init__(self, user_repo: AbstractRepository, redis_repo: AbstractRepository):
-        self.user_repo: AbstractRepository = user_repo()
+        self.user_repo: AbstractRepository = user_repo
         self.redis_repo: AbstractRepository = redis_repo()
 
     def encode_token(self, payload: dict, expire):

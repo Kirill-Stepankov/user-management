@@ -6,10 +6,14 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
+from src.auth.service import AbstractAuthService, AuthService
 from src.config import get_settings
-from src.database import Base, get_async_session
+from src.database import Base, async_session_maker
 from src.main import app
+from src.repository import RedisRepository, S3_repository
 from src.users.models import Group, User
+from src.users.repository import UserRepository
+from src.users.service import AbstractUserService, UserService
 
 settings = get_settings()
 
@@ -22,12 +26,16 @@ async_session_maker = sessionmaker(
 Base.metadata.bind = engine_test
 
 
-async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
-    async with async_session_maker() as session:
-        yield session
+def override_user_service():
+    return UserService(UserRepository(async_session_maker), S3_repository)
 
 
-app.dependency_overrides[get_async_session] = override_get_async_session
+def override_auth_service():
+    return AuthService(UserRepository(async_session_maker), RedisRepository)
+
+
+app.dependency_overrides[AbstractUserService] = override_user_service
+app.dependency_overrides[AbstractAuthService] = override_auth_service
 
 
 @pytest.fixture(autouse=True, scope="session")
