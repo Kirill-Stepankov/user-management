@@ -24,9 +24,9 @@ services:
       - postgres_data:/var/lib/postgresql/data/
   db_test:
     image: postgres:15
+    env_file:
+      - user_management/.env
     environment:
-      POSTGRES_USER: kirill
-      POSTGRES_PASSWORD: 1111
       POSTGRES_DB: test_db
     ports:
       - "5433:5432"
