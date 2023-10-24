@@ -4,8 +4,11 @@ from logs.logger import get_logger
 from typing_extensions import Annotated
 
 from . import config
+from .auth.dependencies import auth_service
 from .auth.exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .auth.router import router as auth_router
+from .auth.service import AbstractAuthService
+from .users.dependencies import user_service
 from .users.exceptions import (
     InvalidEmailException,
     UserAlreadyExistsException,
@@ -14,12 +17,16 @@ from .users.exceptions import (
     UserInvalidCredentialsException,
 )
 from .users.router import router as users_router
+from .users.service import AbstractUserService
 
 logger = get_logger()
 app = FastAPI()
 
 app.include_router(auth_router)
 app.include_router(users_router)
+
+app.dependency_overrides[AbstractUserService] = user_service
+app.dependency_overrides[AbstractAuthService] = auth_service
 
 
 @app.exception_handler(UserAlreadyExistsException)

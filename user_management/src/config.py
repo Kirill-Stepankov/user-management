@@ -6,7 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     logger_config_path: str
     postgres_host: str
+    postgres_host_test: str
     postgres_port: str
+    postgres_db_test: str
     postgres_user: str
     postgres_db: str
     postgres_password: str

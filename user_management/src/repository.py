@@ -4,7 +4,7 @@ from sqlalchemy import delete, desc, insert, inspect, select, update
 
 from .abstract import AbstractRepository
 from .config import get_settings
-from .database import async_session_maker, aws_client, init_redis_pool
+from .database import aws_client, init_redis_pool
 
 settings = get_settings()
 
@@ -12,8 +12,11 @@ settings = get_settings()
 class SQLAlchemyRepository(AbstractRepository):
     model = None
 
+    def __init__(self, session_maker) -> None:
+        self.async_session_maker = session_maker
+
     async def add_one(self, data: dict) -> str:
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             stmt = insert(self.model).values(**data).returning(self.model.uuid)
             res = await session.execute(stmt)
             await session.commit()
@@ -22,7 +25,7 @@ class SQLAlchemyRepository(AbstractRepository):
     async def find(
         self, page, limit, filter_by_name, sort_by, order_by, is_admin, **filters
     ) -> list[model]:
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             columns = {column.name for column in inspect(self.model).columns}
             columns.remove("hashed_password")
             sort_by = sort_by if sort_by in columns else "username"
@@ -41,19 +44,19 @@ class SQLAlchemyRepository(AbstractRepository):
             return res.all()
 
     async def get(self, **filters) -> model:
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             stmt = select(self.model).filter_by(**filters)
             res = await session.scalars(stmt)
             return res.first()
 
     async def delete(self, **filters) -> None:
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             stmt = delete(self.model).filter_by(**filters)
             res = await session.execute(stmt)
             await session.commit()
 
     async def update(self, uuid: str, **values) -> None:
-        async with async_session_maker() as session:
+        async with self.async_session_maker() as session:
             stmt = update(self.model).where(self.model.uuid == uuid).values(**values)
             await session.execute(stmt)
             await session.commit()

@@ -3,17 +3,14 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, Header, Query, status
 from fastapi.responses import JSONResponse
 
-from ..repository import RedisRepository
-from ..users.dependencies import user_service
 from ..users.schemas import (
     EmailSchema,
     ResetPasswordSchema,
     UserAddSchema,
     UserOutputSchema,
 )
-from ..users.service import UserService
-from .dependencies import auth_service
-from .service import AuthService
+from ..users.service import AbstractUserService
+from .service import AbstractAuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -23,21 +20,21 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 )
 async def signup(
     user: UserAddSchema,
-    user_service: Annotated[UserService, Depends(user_service)],
+    user_service: AbstractUserService = Depends(),
 ) -> Any:
     return await user_service.add_user(user)
 
 
 @router.post("/login")
 async def login(
-    user: UserAddSchema, auth_service: Annotated[AuthService, Depends(auth_service)]
+    user: UserAddSchema, auth_service: AbstractAuthService = Depends()
 ) -> dict:
     return await auth_service.login(user)
 
 
 @router.post("/refresh-token")
 async def refresh_token(
-    auth_service: Annotated[AuthService, Depends(auth_service)],
+    auth_service: AbstractAuthService = Depends(),
     token: str = Header(),
 ) -> dict:
     return await auth_service.refresh_tokens(token)
@@ -45,7 +42,7 @@ async def refresh_token(
 
 @router.post("/reset-password", status_code=status.HTTP_200_OK)
 async def reset_password(
-    auth_service: Annotated[AuthService, Depends(auth_service)], email: EmailSchema
+    email: EmailSchema, auth_service: AbstractAuthService = Depends()
 ):
     await auth_service.send_reset_request(email)
     return JSONResponse(
@@ -57,7 +54,7 @@ async def reset_password(
 async def change_password(
     token: Annotated[str, Query()],
     passwords: ResetPasswordSchema,
-    auth_service: Annotated[AuthService, Depends(auth_service)],
+    auth_service: AbstractAuthService = Depends(),
 ):
     await auth_service.reset_password(passwords, token)
 

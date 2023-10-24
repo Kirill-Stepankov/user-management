@@ -2,6 +2,7 @@ from typing import Annotated
 
 from email_validator import EmailNotValidError, validate_email
 from fastapi import Depends, Form
+from src.database import async_session_maker
 from src.repository import S3_repository
 
 from .enums import Role
@@ -12,7 +13,7 @@ from .service import UserService
 
 
 def user_service():
-    return UserService(UserRepository, S3_repository)
+    return UserService(UserRepository(async_session_maker), S3_repository)
 
 
 def UserUpdateModel(

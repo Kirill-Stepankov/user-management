@@ -1,4 +1,5 @@
-from fastapi import Header, HTTPException, status
+from fastapi import Header
+from src.database import async_session_maker
 
 from ..config import get_settings
 from ..repository import RedisRepository
@@ -14,7 +15,7 @@ settings = get_settings()
 
 
 def auth_service():
-    return AuthService(UserRepository, RedisRepository)
+    return AuthService(UserRepository(async_session_maker), RedisRepository)
 
 
 async def authenticate(token: str = Header()) -> User:

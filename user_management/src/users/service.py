@@ -1,13 +1,15 @@
 import uuid
+from typing import Annotated
 
 import botocore
-from fastapi import UploadFile
+from fastapi import Depends, UploadFile
 from passlib.context import CryptContext
 from src.repository import AbstractRepository, S3_repository
 
 from .enums import Role
 from .exceptions import UserAlreadyExistsException, UserDoesNotExistException
 from .models import User
+from .repository import UserRepository
 from .schemas import (
     UserAddSchema,
     UserOutputSchema,
@@ -29,9 +31,16 @@ class HashPassword:
         return pwd_context.verify(plain_password, hashed_password)
 
 
-class UserService:
-    def __init__(self, user_repo: AbstractRepository, s3_repo: AbstractRepository):
-        self.user_repo: AbstractRepository = user_repo()
+from abc import ABC
+
+
+class AbstractUserService(ABC):
+    pass
+
+
+class UserService(AbstractUserService):
+    def __init__(self, user_repo: UserRepository, s3_repo: AbstractRepository):
+        self.user_repo: UserRepository = user_repo
         self.s3_repo: AbstractRepository = s3_repo()
 
     async def add_user(self, user: UserAddSchema) -> UserOutputSchema:

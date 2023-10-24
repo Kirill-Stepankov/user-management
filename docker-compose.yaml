@@ -22,6 +22,16 @@ services:
       - user_management/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+  db_test:
+    image: postgres:15
+    env_file:
+      - user_management/.env
+    environment:
+      POSTGRES_DB: test_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data_test:/var/lib/postgresql/data
   redis:
     container_name: redis
     restart: unless-stopped
@@ -53,3 +63,4 @@ volumes:
   postgres_data:
   redis_data:
   localstack-data:
+  pg_data_test:
