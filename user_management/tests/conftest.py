@@ -91,4 +91,6 @@ async def ac() -> AsyncGenerator[AsyncClient, None]:
 @pytest.fixture
 async def user(user_add_credentials):
     user_service = override_user_service()
-    return await user_service.add_user(user_add_credentials)
+    user = await user_service.add_user(user_add_credentials)
+    yield user
+    await user_service.delete_user(user.uuid)

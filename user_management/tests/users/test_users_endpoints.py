@@ -17,10 +17,19 @@ async def test_add_role():
 
 async def test_get_me(
     ac: AsyncClient,
-    jwt_tokens,
+    jwt_tokens: dict,
 ):
-    print(jwt_tokens.get("access_token"))
     response = await ac.get(
         "/user/me", headers={"token": jwt_tokens.get("access_token")}
+    )
+    assert response.status_code == 200
+
+
+async def test_delete_me(
+    ac: AsyncClient,
+    jwt_tokens: dict,
+):
+    response = await ac.delete(
+        "user/me", headers={"token": jwt_tokens.get("access_token")}
     )
     assert response.status_code == 200
