@@ -1,5 +1,6 @@
 from fastapi import Header
-from src.database import async_session_maker
+from src.auth.service import AbstractAuthService
+from src.users.service import AbstractUserService
 
 from ..config import get_settings
 from ..repository import RedisRepository
@@ -14,13 +15,15 @@ from .utils import decode_token
 settings = get_settings()
 
 
-def auth_service():
+def auth_service(async_session_maker):
     return AuthService(UserRepository(async_session_maker), RedisRepository)
 
 
-async def authenticate(token: str = Header()) -> User:
-    auth_serv = auth_service()
-    user_serv = user_service()
+async def authenticate(
+    auth_serv: AbstractAuthService,
+    user_serv: AbstractUserService,
+    token: str = Header(),
+) -> User:
     is_blacklisted = await auth_serv.token_is_blacklisted(token)
     if is_blacklisted:
         raise TokenIsBlacklistedException
