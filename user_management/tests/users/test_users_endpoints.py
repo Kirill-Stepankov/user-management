@@ -15,8 +15,12 @@ async def test_add_role():
         assert result.all()[0][0].name == "wow"
 
 
-# async def test_get_me(
-#         ac: AsyncClient,
-
-# ):
-#     pass
+async def test_get_me(
+    ac: AsyncClient,
+    jwt_tokens,
+):
+    print(jwt_tokens.get("access_token"))
+    response = await ac.get(
+        "/user/me", headers={"token": jwt_tokens.get("access_token")}
+    )
+    assert response.status_code == 200

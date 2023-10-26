@@ -1,10 +1,12 @@
 from fastapi import Depends, FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from logs.logger import get_logger
+from src.users.models import User
 from typing_extensions import Annotated
 
 from . import config
-from .auth.dependencies import auth_service
+from .abstract import authenticate_stub
+from .auth.dependencies import auth_service, authenticate
 from .auth.exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .auth.router import router as auth_router
 from .auth.service import AbstractAuthService
@@ -25,8 +27,10 @@ app = FastAPI()
 app.include_router(auth_router)
 app.include_router(users_router)
 
+
 app.dependency_overrides[AbstractUserService] = user_service
 app.dependency_overrides[AbstractAuthService] = auth_service
+app.dependency_overrides[authenticate_stub] = authenticate
 
 
 @app.exception_handler(UserAlreadyExistsException)

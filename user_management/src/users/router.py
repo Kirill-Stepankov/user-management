@@ -1,10 +1,10 @@
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Query
+from fastapi import APIRouter, Depends, File, Header, Query
 from fastapi.responses import JSONResponse
 from pydantic import UUID4
+from src.abstract import authenticate_stub
 
-from ..auth.dependencies import authenticate
 from .dependencies import UserUpdateByAdminModel, UserUpdateModel
 from .models import User
 from .permissions import is_admin, is_moderator, is_users_moderator
@@ -16,13 +16,13 @@ router = APIRouter(prefix="/user", tags=["users"])
 
 
 @router.get("/me", response_model=UserSchema)
-async def about_me(user: Annotated[User, Depends(authenticate)]) -> Any:
+async def about_me(user: Annotated[User, Depends(authenticate_stub)]) -> Any:
     return UserSchema.model_validate(user)
 
 
 @router.patch("/me", response_model=UserSchema)
 async def edit_about(
-    user: Annotated[User, Depends(authenticate)],
+    user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
     to_update: Annotated[UserUpdateSchema, Depends(UserUpdateModel)] = None,
     file: Annotated[bytes, File()] = None,
@@ -32,7 +32,7 @@ async def edit_about(
 
 @router.delete("/me")
 async def delete_me(
-    user: Annotated[User, Depends(authenticate)],
+    user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
 ):
     await user_service.delete_user(user.uuid)
@@ -43,7 +43,7 @@ async def delete_me(
 @has_any_permissions([is_admin, is_users_moderator])
 async def about_user(
     user_id: UUID4,
-    user: Annotated[User, Depends(authenticate)],
+    user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
 ):
     return await user_service.get_user(user_id)
@@ -53,7 +53,7 @@ async def about_user(
 @has_any_permissions([is_admin])
 async def edit_user(
     user_id: UUID4,
-    user: Annotated[User, Depends(authenticate)],
+    user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
     to_update: Annotated[
         UserUpdateByAdminSchema, Depends(UserUpdateByAdminModel)
@@ -66,7 +66,7 @@ async def edit_user(
 @router.get("/")
 @has_any_permissions([is_admin, is_moderator])
 async def get_users(
-    user: Annotated[User, Depends(authenticate)],
+    user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
     page: Annotated[int, Query(ge=1)] = 1,
     limit: Annotated[int, Query(ge=1)] = 30,

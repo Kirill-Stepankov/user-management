@@ -15,3 +15,4 @@ async def test_signup(
     )
 
     assert response.status_code == 201
+    assert response.json().get("username") == "kirill"
