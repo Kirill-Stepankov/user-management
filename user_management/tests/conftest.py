@@ -1,24 +1,22 @@
 import asyncio
+from functools import partial
 from typing import AsyncGenerator
 
 import pytest
-from fastapi import Header
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 from src.abstract import authenticate_stub
-from src.auth.exceptions import TokenIsBlacklistedException
-from src.auth.service import AbstractAuthService, AuthService
-from src.auth.utils import decode_token
+from src.auth.dependencies import auth_service
+from src.auth.service import AbstractAuthService
 from src.config import get_settings
-from src.database import Base, async_session_maker
-from src.main import app
-from src.repository import RedisRepository, S3_repository
-from src.users.exceptions import UserInvalidCredentialsException
+from src.database import Base
+from src.di import AuthenticatePartial
+from src.main import create_app
+from src.users.dependencies import user_service
 from src.users.models import Group, User
-from src.users.repository import UserRepository
-from src.users.service import AbstractUserService, UserService
+from src.users.service import AbstractUserService
 
 pytest_plugins = ["users.user_fixtures"]
 
@@ -30,40 +28,8 @@ engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 async_session_maker = sessionmaker(
     engine_test, class_=AsyncSession, expire_on_commit=False
 )
+
 Base.metadata.bind = engine_test
-
-
-def override_user_service():
-    return UserService(UserRepository(async_session_maker), S3_repository)
-
-
-def override_auth_service():
-    return AuthService(UserRepository(async_session_maker), RedisRepository)
-
-
-async def override_authenticate(token: str = Header()) -> User:
-    auth_serv = override_auth_service()
-    user_serv = override_user_service()
-    is_blacklisted = await auth_serv.token_is_blacklisted(token)
-    if is_blacklisted:
-        raise TokenIsBlacklistedException
-    payload = decode_token(token)
-    uuid = payload.get("uuid")
-
-    is_access = payload.get("is_access")
-    if is_access is None:
-        raise UserInvalidCredentialsException
-
-    user = await user_serv.get_user(uuid=uuid)
-    if user is None:
-        raise UserInvalidCredentialsException
-
-    return user
-
-
-app.dependency_overrides[AbstractUserService] = override_user_service
-app.dependency_overrides[AbstractAuthService] = override_auth_service
-app.dependency_overrides[authenticate_stub] = override_authenticate
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -84,13 +50,25 @@ def event_loop(request):
 
 @pytest.fixture(scope="session")
 async def ac() -> AsyncGenerator[AsyncClient, None]:
+    app = create_app()
+
+    app.dependency_overrides[AbstractUserService] = partial(
+        user_service, async_session_maker
+    )
+    app.dependency_overrides[AbstractAuthService] = partial(
+        auth_service, async_session_maker
+    )
+    app.dependency_overrides[authenticate_stub] = AuthenticatePartial(
+        user_service(async_session_maker), auth_service(async_session_maker)
+    )
+
     async with AsyncClient(app=app, base_url="http://") as ac:
         yield ac
 
 
 @pytest.fixture
 async def user(user_add_credentials):
-    user_service = override_user_service()
-    user = await user_service.add_user(user_add_credentials)
+    user_serv = user_service(async_session_maker)
+    user = await user_serv.add_user(user_add_credentials)
     yield user
-    await user_service.delete_user(user.uuid)
+    await user_serv.delete_user(user.uuid)
