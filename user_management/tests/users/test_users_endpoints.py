@@ -1,3 +1,4 @@
+import pytest
 from httpx import AsyncClient
 from sqlalchemy import insert, select
 from src.users.models import Group
@@ -15,30 +16,35 @@ async def test_add_role():
         assert result.all()[0][0].name == "wow"
 
 
+@pytest.mark.parametrize(
+    "token, expected_status",
+    [
+        (pytest.lazy_fixture("jwt_token"), 200),
+        (pytest.lazy_fixture("invalid_jwt_token"), 401),
+    ],
+)
 async def test_get_me(
+    token,
+    expected_status: int,
     ac: AsyncClient,
-    jwt_tokens: dict,
 ):
-    response = await ac.get(
-        "/user/me", headers={"token": jwt_tokens.get("access_token")}
-    )
-    print(response)
-    assert response.status_code == 200
+    response = await ac.get("/user/me", headers={"token": token.get("access_token")})
+    assert response.status_code == expected_status
 
 
 async def test_delete_me(
     ac: AsyncClient,
-    jwt_tokens: dict,
+    jwt_token: dict,
 ):
     response = await ac.delete(
-        "user/me", headers={"token": jwt_tokens.get("access_token")}
+        "user/me", headers={"token": jwt_token.get("access_token")}
     )
     assert response.status_code == 200
 
 
 async def test_patch_me(
     ac: AsyncClient,
-    jwt_tokens: dict,
+    jwt_token: dict,
 ):
     pass
 
@@ -51,6 +57,6 @@ async def test_patch_me(
 
 async def test_get_user(
     ac: AsyncClient,
-    jwt_tokens: dict,
+    jwt_token: dict,
 ):
     pass

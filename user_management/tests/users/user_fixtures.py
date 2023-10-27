@@ -10,7 +10,12 @@ def user_add_credentials():
 
 
 @pytest.fixture
-def jwt_tokens(user):
+def jwt_token(user):
     auth_serv = auth_service(async_session_maker)
     payload = {"uuid": user.uuid, "username": user.username}
     return auth_serv.create_tokens(payload)
+
+
+@pytest.fixture
+def invalid_jwt_token():
+    return {"access_token": "invalid", "refresh_token": "invalid"}
