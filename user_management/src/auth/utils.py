@@ -1,15 +1,14 @@
 import jwt
 from fastapi import HTTPException, status
+from src.config import get_settings
 from src.database import aws_client
-
-from ..config import get_settings
 
 settings = get_settings()
 
 
 def decode_token(token: str) -> dict:
     if token is None:
-        raise HTTPException(status_code=401, detail="bb")
+        raise HTTPException(status_code=401, detail="There is no token")
     try:
         payload = jwt.decode(
             token, settings.secret_key, algorithms=[settings.crypt_algorithm]

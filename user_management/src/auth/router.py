@@ -2,14 +2,14 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Header, Query, status
 from fastapi.responses import JSONResponse
-
-from ..users.schemas import (
+from src.users.schemas import (
     EmailSchema,
     ResetPasswordSchema,
     UserAddSchema,
     UserOutputSchema,
 )
-from ..users.service import AbstractUserService
+from src.users.service import AbstractUserService
+
 from .service import AbstractAuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])

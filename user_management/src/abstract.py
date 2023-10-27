@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from fastapi import Header
+
 
 class AbstractRepository(ABC):
     @abstractmethod
@@ -17,3 +19,7 @@ class AbstractRepository(ABC):
     @abstractmethod
     async def delete():
         pass
+
+
+async def authenticate_stub(token: str = Header()):
+    raise NotImplementedError

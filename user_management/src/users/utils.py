@@ -31,7 +31,7 @@ def has_any_permissions(permissions: list[callable]):
             user = kwargs.get("user")
             user_by_uuid = None
             if uuid is not None:
-                user_serv = user_service()
+                user_serv = kwargs.get("user_service")
                 user_by_uuid = await user_serv.get_user(uuid)
             for permission in permissions:
                 if permission(user, object=user_by_uuid):
