@@ -2,15 +2,15 @@ from abc import ABC
 from datetime import datetime, timedelta
 
 import jwt
-
-from ..config import get_settings
-from ..repository import AbstractRepository
-from ..users.exceptions import (
+from src.config import get_settings
+from src.repository import AbstractRepository
+from src.users.exceptions import (
     UserDoesNotExistException,
     UserInvalidCredentialsException,
 )
-from ..users.schemas import ResetPasswordSchema, UserAddSchema
-from ..users.service import HashPassword
+from src.users.schemas import ResetPasswordSchema, UserAddSchema
+from src.users.service import HashPassword
+
 from .exceptions import NotRefreshTokenException, TokenIsBlacklistedException
 from .utils import decode_token, send_reset_pass_email
 
