@@ -2,20 +2,29 @@ from .enums import Role
 from .models import User
 
 
-def is_admin(user: User, **kwargs) -> bool:
-    return user.role == Role.ADMIN
+class BasePermission:
+    def has_permission(user: User, **kwargs) -> bool:
+        pass
 
 
-def is_moderator(user: User, **kwargs) -> bool:
-    return user.role == Role.MODERATOR
+class IsAdmin(BasePermission):
+    def has_permission(user: User, **kwargs) -> bool:
+        return user.role == Role.ADMIN
 
 
-def is_users_moderator(user: User, **kwargs) -> bool:
-    object = kwargs.get("object")
-    if user.role == Role.MODERATOR:
-        return user.group_id == object.group_id
-    return False
+class IsModerator(BasePermission):
+    def has_permission(user: User, **kwargs) -> bool:
+        return user.role == Role.MODERATOR
 
 
-def is_user(user: User, **kwargs) -> bool:
-    return user.role == Role.USER
+class IsUsersModerator(BasePermission):
+    def has_permission(user: User, **kwargs) -> bool:
+        object = kwargs.get("object")
+        if user.role == Role.MODERATOR:
+            return user.group_id == object.group_id
+        return False
+
+
+class IsUser(BasePermission):
+    def has_permission(user: User, **kwargs) -> bool:
+        return user.role == Role.USER

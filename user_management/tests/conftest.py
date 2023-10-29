@@ -26,7 +26,7 @@ DATABASE_URL_TEST = f"postgresql+asyncpg://{settings.postgres_user}:{settings.po
 
 engine_test = create_async_engine(DATABASE_URL_TEST, poolclass=NullPool)
 async_session_maker = sessionmaker(
-    engine_test, class_=AsyncSession, expire_on_commit=False
+    engine_test, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
 
 Base.metadata.bind = engine_test

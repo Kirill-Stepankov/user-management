@@ -6,6 +6,7 @@ from uuid import UUID
 from .dependencies import user_service
 from .enums import Role
 from .exceptions import UserDoesNotHavePermission
+from .permissions import BasePermission
 
 old_default = JSONEncoder.default
 
@@ -23,7 +24,7 @@ def new_default(self, obj):
 JSONEncoder.default = new_default
 
 
-def has_any_permissions(permissions: list[callable]):
+def has_any_permissions(permissions: list[BasePermission]):
     def inner(func):
         @wraps(func)
         async def wrapper(*args, **kwargs):
@@ -34,7 +35,7 @@ def has_any_permissions(permissions: list[callable]):
                 user_serv = kwargs.get("user_service")
                 user_by_uuid = await user_serv.get_user(uuid)
             for permission in permissions:
-                if permission(user, object=user_by_uuid):
+                if permission.has_permission(user, object=user_by_uuid):
                     return await func(*args, **kwargs)
             raise UserDoesNotHavePermission
 

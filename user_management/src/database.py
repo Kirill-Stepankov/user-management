@@ -15,7 +15,9 @@ def create_session_maker():
     DATABASE_URL = f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
     engine = create_async_engine(DATABASE_URL)
-    return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    return sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
 
 
 pool = ConnectionPool.from_url("redis://redis", encoding="utf-8", decode_responses=True)
