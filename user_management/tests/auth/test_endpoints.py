@@ -68,3 +68,22 @@ async def test_reset_password(
     response = await ac.post("/auth/reset-password", data=data.model_dump_json())
 
     assert response.status_code == 200
+
+
+@pytest.mark.parametrize(
+    "token, expected_status",
+    [
+        (pytest.lazy_fixture("jwt_token"), 200),
+        (pytest.lazy_fixture("invalid_jwt_token"), 401),
+    ],
+)
+async def test_refresh_token(
+    token,
+    expected_status,
+    ac: AsyncClient,
+):
+    response = await ac.post(
+        "/auth/refresh-token", headers={"token": token.get("refresh_token")}
+    )
+
+    assert response.status_code == expected_status
