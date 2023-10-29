@@ -1,6 +1,6 @@
 import pytest
 from httpx import AsyncClient
-from src.users.permissions import IsAdmin, IsUsersModerator
+from src.users.permissions import IsAdmin, IsModerator, IsUsersModerator
 
 
 @pytest.fixture
@@ -12,6 +12,12 @@ def is_admin_mock(mocker):
 @pytest.fixture
 def is_users_moderator_mock(mocker):
     mock = mocker.patch.object(IsUsersModerator, "has_permission")
+    return mock
+
+
+@pytest.fixture
+def is_moderator_mock(mocker):
+    mock = mocker.patch.object(IsModerator, "has_permission")
     return mock
 
 
@@ -81,3 +87,39 @@ async def test_patch_me(
     jwt_token: dict,
 ):
     pass
+
+
+@pytest.mark.parametrize(
+    "is_admin, is_moderator, expected_status",
+    [
+        (True, False, 200),
+        (False, True, 200),
+        (True, True, 200),
+        (False, False, 403),
+    ],
+)
+async def test_get_users(
+    is_admin,
+    is_moderator,
+    expected_status,
+    ac: AsyncClient,
+    jwt_token: dict,
+    is_admin_mock,
+    is_moderator_mock,
+):
+    is_admin_mock.return_value = is_admin
+    is_moderator_mock.return_value = is_moderator
+
+    params = {
+        "page": 1,
+        "limit": 2,
+        "filter_by_name": "test",
+        "sort_by": "username",
+        "order_by": "desc",
+    }
+
+    response = await ac.get(
+        "user/", params=params, headers={"token": jwt_token.get("access_token")}
+    )
+
+    assert response.status_code == expected_status
