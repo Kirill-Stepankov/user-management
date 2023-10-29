@@ -60,7 +60,7 @@ async def edit_user(
     ] = None,
     file: Annotated[bytes, File()] = None,
 ):
-    return await user_service.patch_user(user_id, file)
+    return await user_service.patch_user(user_id, to_update, file)
 
 
 @router.get("/")
