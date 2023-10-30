@@ -1,0 +1,82 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = "User management system"
+authors = ["Kirill-Stepankov <kirillstepankov18@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.103.2"
+pre-commit = "^3.4.0"
+pyyaml = "^6.0.1"
+uvicorn = "^0.23.2"
+pydantic-settings = "^2.0.3"
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.21"}
+alembic = "^1.12.0"
+psycopg2-binary = "^2.9.9"
+asyncpg = "^0.28.0"
+email-validator = "^2.0.0.post2"
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pyjwt = "^2.8.0"
+redis = "^5.0.1"
+pytest = "^7.4.2"
+python-multipart = "^0.0.6"
+aioboto3 = "^11.3.1"
+httpx = "^0.25.0"
+pytest-asyncio = "^0.21.1"
+pytest-mock = "^3.12.0"
+pytest-lazy-fixture = "^0.6.3"
+
+[tool.pytest.ini_options]
+python_files = [
+  'tests.py',
+  'test_*.py',
+  '*_tests.py'
+]
+pythonpath = '. app'
+addopts = "-vv -x --lf"
+testpaths = [
+    "tests",
+]
+asyncio_mode='auto'
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pre_commit]
+hooks = [
+  "trailing-whitespace",
+  "end-of-file-fixer",
+  "check-yaml",
+  "debug-statements",
+  "requirements-txt-fixer",
+  "black",
+  "isort",
+]
+
+[tool.pre_commit.hook-trailing-whitespace]
+files = ["*.py"]
+
+[tool.pre_commit.hook-end-of-file-fixer]
+files = ["*.py"]
+
+[tool.pre_commit.hook-check-yaml]
+files = ["*.yml", "*.yaml"]
+
+[tool.pre_commit.hook-debug-statements]
+files = ["*.py"]
+
+[tool.pre_commit.hook-double-quote-string-fixer]
+files = ["*.py"]
+
+[tool.pre_commit.hook-requirements-txt-fixer]
+files = ["requirements.txt"]
+
+[tool.pre_commit.hook-black]
+files = ["*.py"]
+
+[tool.pre_commit.hook-isort]
+args = ["--profile", "black"]
+files = ["*.py"]
