@@ -16,7 +16,7 @@ def valid_user_data():
 async def test_signup(ac: AsyncClient, user_add_credentials):
     user_add_credentials.username = "testtest"
     response = await ac.post(
-        "/auth/signup", data=user_add_credentials.model_dump_json()
+        "/auth/signup", content=user_add_credentials.model_dump_json()
     )
 
     assert response.status_code == 201
@@ -36,7 +36,7 @@ async def test_login(
     ac: AsyncClient,
     user,
 ):
-    response = await ac.post("/auth/login", data=data.model_dump_json())
+    response = await ac.post("/auth/login", content=data.model_dump_json())
 
     assert response.status_code == expected_status
 
@@ -53,7 +53,7 @@ async def test_change_password(token, expected_status, ac: AsyncClient, user):
 
     response = await ac.post(
         "/auth/change-password",
-        data=data.model_dump_json(),
+        content=data.model_dump_json(),
         params={"token": token.get("access_token")},
     )
 
@@ -65,7 +65,7 @@ async def test_reset_password(
     user,
 ):
     data = EmailSchema(email="test@mail.com")
-    response = await ac.post("/auth/reset-password", data=data.model_dump_json())
+    response = await ac.post("/auth/reset-password", content=data.model_dump_json())
 
     assert response.status_code == 200
 

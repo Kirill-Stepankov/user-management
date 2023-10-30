@@ -67,8 +67,17 @@ async def ac() -> AsyncGenerator[AsyncClient, None]:
 
 
 @pytest.fixture
-async def user(user_add_credentials):
-    user_serv = user_service(async_session_maker)
+async def user_serv():
+    return user_service(async_session_maker)
+
+
+@pytest.fixture
+async def auth_serv():
+    return auth_service(async_session_maker)
+
+
+@pytest.fixture
+async def user(user_add_credentials, user_serv):
     user = await user_serv.add_user(user_add_credentials)
     yield user
     await user_serv.delete_user(user.uuid)

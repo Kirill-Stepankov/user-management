@@ -4,7 +4,7 @@ from .models import User
 
 class BasePermission:
     def has_permission(user: User, **kwargs) -> bool:
-        pass
+        raise NotImplementedError
 
 
 class IsAdmin(BasePermission):

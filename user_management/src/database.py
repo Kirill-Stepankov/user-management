@@ -29,9 +29,8 @@ class Base(DeclarativeBase):
 
 @asynccontextmanager
 async def init_redis_pool() -> AsyncIterator[Redis]:
-    client = Redis.from_pool(pool)
-    yield client
-    await client.close()
+    async with Redis.from_pool(pool) as client:
+        yield client
 
 
 session = aioboto3.Session()
@@ -45,5 +44,5 @@ async def aws_client(service):
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
         region_name="us-east-1",
-    ) as s3:
-        yield s3
+    ) as client:
+        yield client
