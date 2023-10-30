@@ -93,7 +93,7 @@ class AuthService(AbstractAuthService):
     async def send_reset_request(self, email):
         user = await self.user_repo.get(email=email.email)
         if not user:
-            raise UserDoesNotExistException("None")
+            return
         expire = datetime.utcnow() + timedelta(minutes=15)
 
         token = self.encode_token(payload={"uuid": user.uuid}, expire=expire)

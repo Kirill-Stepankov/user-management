@@ -15,7 +15,9 @@ def create_session_maker():
     DATABASE_URL = f"postgresql+asyncpg://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:{settings.postgres_port}/{settings.postgres_db}"
 
     engine = create_async_engine(DATABASE_URL)
-    return sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    return sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
 
 
 pool = ConnectionPool.from_url("redis://redis", encoding="utf-8", decode_responses=True)
@@ -27,9 +29,8 @@ class Base(DeclarativeBase):
 
 @asynccontextmanager
 async def init_redis_pool() -> AsyncIterator[Redis]:
-    client = Redis.from_pool(pool)
-    yield client
-    await client.close()
+    async with Redis.from_pool(pool) as client:
+        yield client
 
 
 session = aioboto3.Session()
@@ -43,5 +44,5 @@ async def aws_client(service):
         aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
         region_name="us-east-1",
-    ) as s3:
-        yield s3
+    ) as client:
+        yield client

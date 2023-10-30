@@ -7,7 +7,7 @@ from src.abstract import authenticate_stub
 
 from .dependencies import UserUpdateByAdminModel, UserUpdateModel
 from .models import User
-from .permissions import is_admin, is_moderator, is_users_moderator
+from .permissions import IsAdmin, IsModerator, IsUser, IsUsersModerator
 from .schemas import UserSchema, UserUpdateByAdminSchema, UserUpdateSchema
 from .service import AbstractUserService
 from .utils import has_any_permissions
@@ -40,7 +40,7 @@ async def delete_me(
 
 
 @router.get("/{user_id}", response_model=UserSchema)
-@has_any_permissions([is_admin, is_users_moderator])
+@has_any_permissions([IsAdmin, IsUsersModerator])
 async def about_user(
     user_id: UUID4,
     user: Annotated[User, Depends(authenticate_stub)],
@@ -50,7 +50,7 @@ async def about_user(
 
 
 @router.patch("/{user_id}")
-@has_any_permissions([is_admin])
+@has_any_permissions([IsAdmin])
 async def edit_user(
     user_id: UUID4,
     user: Annotated[User, Depends(authenticate_stub)],
@@ -60,11 +60,11 @@ async def edit_user(
     ] = None,
     file: Annotated[bytes, File()] = None,
 ):
-    return await user_service.patch_user(user_id, file)
+    return await user_service.patch_user(user_id, to_update, file)
 
 
 @router.get("/")
-@has_any_permissions([is_admin, is_moderator])
+@has_any_permissions([IsAdmin, IsModerator])
 async def get_users(
     user: Annotated[User, Depends(authenticate_stub)],
     user_service: AbstractUserService = Depends(),
