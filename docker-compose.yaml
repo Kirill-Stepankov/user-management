@@ -10,6 +10,8 @@ services:
       - ./user_management:/app
     ports:
       - "8000:8000"
+    networks:
+      - innotter
     depends_on:
       - db
       - redis
@@ -17,9 +19,11 @@ services:
   db:
     image: postgres:15
     ports:
-      - "5432:5432"
+      - "5434:5432"
     env_file:
       - user_management/.env
+    networks:
+      - innotter
     volumes:
       - postgres_data:/var/lib/postgresql/data/
   db_test:
@@ -28,6 +32,8 @@ services:
       - user_management/.env
     environment:
       POSTGRES_DB: test_db
+    networks:
+      - innotter
     ports:
       - "5433:5432"
   redis:
@@ -36,6 +42,8 @@ services:
     image: redis:7.0.5-alpine
     expose:
       - 6379
+    networks:
+      - innotter
     volumes:
       - redis_data:/data
   localstack:
@@ -45,13 +53,15 @@ services:
     env_file:
       - user_management/.env
     ports:
-      - "4566-4599:4566-4599"
+      - "4566:4566"
       - 8080:8080
     environment:
       - SERVICES=s3,ses
       - DEBUG=${DEBUG- }
       - DOCKER_HOST=unix:///var/run/docker.sock
       - HOSTNAME=localstack
+    networks:
+      - innotter
     volumes:
       - localstack-data:/tmp/localstack
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -61,3 +71,6 @@ volumes:
   postgres_data:
   redis_data:
   localstack-data:
+networks:
+  innotter:
+    external: true
