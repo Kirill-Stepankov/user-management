@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 
 from sqlalchemy import delete, desc, insert, inspect, select, update
@@ -103,3 +104,14 @@ class S3_repository(AbstractRepository):
 
     async def find(self, key: str):
         return await self.get(key)
+
+    async def get_avatar(self, avatar_s3_path: str):
+        async with aws_client("s3") as s3:
+            try:
+                s3_ob = await s3.get_object(
+                    Bucket=settings.s3_bucket_name, Key=avatar_s3_path
+                )
+            except s3.exceptions.NoSuchKey:
+                return None
+            image_bytes = await s3_ob["Body"].read()
+            return base64.b64encode(image_bytes).decode("utf-8")

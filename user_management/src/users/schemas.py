@@ -63,6 +63,10 @@ class UserSchema(UserBaseSchema, EmailSchema):
     model_config = ConfigDict(from_attributes=True)
 
 
+class UserWithAvatarSchema(UserSchema):
+    image: bytes | None = None
+
+
 class ResetPasswordSchema(BaseModel):
     password: str = Field(min_length=8)
     repeat_password: str = Field(min_length=8)

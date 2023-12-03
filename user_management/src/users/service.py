@@ -16,6 +16,7 @@ from .schemas import (
     UserSchema,
     UserUpdateByAdminSchema,
     UserUpdateSchema,
+    UserWithAvatarSchema,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -56,11 +57,23 @@ class UserService(AbstractUserService):
     async def delete_user(self, uuid: uuid):
         await self.user_repo.delete(uuid=uuid)
 
-    async def get_user(self, uuid: uuid) -> UserSchema:
+    async def get_user(self, uuid: uuid) -> UserWithAvatarSchema:
         user = await self.user_repo.get(uuid=uuid)
         if user is None:
             raise UserDoesNotExistException("None")
-        return UserSchema.model_validate(user)
+        user_output = UserWithAvatarSchema.model_validate(user)
+        user_output.image = await self.get_user_avatar(user_output.s3_path)
+        return user_output
+
+    async def get_me(self, user: User):
+        user_output = UserWithAvatarSchema.model_validate(user)
+        user_output.image = await self.get_user_avatar(user_output.s3_path)
+        return user_output
+
+    async def get_user_avatar(self, s3_path: str) -> bytes:
+        if s3_path:
+            return await self.s3_repo.get_avatar(s3_path)
+        return None
 
     async def patch_user(
         self,
@@ -73,6 +86,12 @@ class UserService(AbstractUserService):
             for key, value in to_update.model_dump().items()
             if value is not None
         }
+
+        username = filtered.get("username")
+        user = await self.user_repo.get(username=username)
+        if user is not None:
+            raise UserAlreadyExistsException(username)
+
         if file:
             filtered["s3_path"] = str(uuid)
 

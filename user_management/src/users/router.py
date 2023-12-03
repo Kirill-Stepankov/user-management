@@ -8,16 +8,24 @@ from src.abstract import authenticate_stub
 from .dependencies import UserUpdateByAdminModel, UserUpdateModel
 from .models import User
 from .permissions import IsAdmin, IsModerator, IsUser, IsUsersModerator
-from .schemas import UserSchema, UserUpdateByAdminSchema, UserUpdateSchema
+from .schemas import (
+    UserSchema,
+    UserUpdateByAdminSchema,
+    UserUpdateSchema,
+    UserWithAvatarSchema,
+)
 from .service import AbstractUserService
 from .utils import has_any_permissions
 
 router = APIRouter(prefix="/user", tags=["users"])
 
 
-@router.get("/me", response_model=UserSchema)
-async def about_me(user: Annotated[User, Depends(authenticate_stub)]) -> Any:
-    return UserSchema.model_validate(user)
+@router.get("/me", response_model=UserWithAvatarSchema)
+async def about_me(
+    user: Annotated[User, Depends(authenticate_stub)],
+    user_service: AbstractUserService = Depends(),
+) -> Any:
+    return await user_service.get_me(user)
 
 
 @router.patch("/me", response_model=UserSchema)
@@ -39,7 +47,7 @@ async def delete_me(
     return JSONResponse(content={"detail": "User is successfully deleted."})
 
 
-@router.get("/{user_id}", response_model=UserSchema)
+@router.get("/{user_id}", response_model=UserWithAvatarSchema)
 @has_any_permissions([IsAdmin, IsUsersModerator])
 async def about_user(
     user_id: UUID4,

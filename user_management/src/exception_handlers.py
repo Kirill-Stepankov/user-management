@@ -12,7 +12,7 @@ from src.users.exceptions import (
 
 async def user_already_exists(request: Request, exc: UserAlreadyExistsException):
     return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
             "detail": f"User with '{exc.username}' username is already registered."
         },
@@ -23,7 +23,7 @@ async def user_does_not_exist(request: Request, exc: UserDoesNotExistException):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content={
-            "detail": f"User with '{exc.username}' username isn't exist. Please register"
+            "detail": f"User with '{exc.username}' username doesn't exist. Please register"
         },
     )
 
